@@ -1,0 +1,16 @@
+streamlit
+langchain
+langchain-community
+langchain-ollama
+chromadb
+pymupdf
+python-docx
+beautifulsoup4
+requests
+pyyaml
+python-dotenv
+pandas
+numpy
+plotly
+streamlit-extras
+pytest
