@@ -11,6 +11,11 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
+Demo
+<img width="1920" height="907" alt="upload_screenshot" src="https://github.com/user-attachments/assets/8997865f-745d-45e6-97b9-5615ea382000" />
+<img width="1920" height="923" alt="summarize_screenshot" src="https://github.com/user-attachments/assets/80f40c47-c558-48a0-b302-37a29e31be4b" />
+<img width="1920" height="924" alt="chat_screenshot" src="https://github.com/user-attachments/assets/d7c9a779-582f-4ebe-86e0-599c1f1df1bc" />
+<img width="1920" height="929" alt="analytics_screenshot" src="https://github.com/user-attachments/assets/87d61da5-872f-42cf-a688-18f1dc47a2d1" />
 
 ## 📌 What is this?
 
