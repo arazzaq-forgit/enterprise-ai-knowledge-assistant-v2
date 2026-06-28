@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -14,7 +15,9 @@ pipeline = None
 async def lifespan(app: FastAPI):
     global pipeline
     print("Starting RAG pipeline...")
-    pipeline = RAGPipeline()
+    pipeline = RAGPipeline(
+     llm_model=os.getenv("LLM_MODEL", "llama3-8b-8192"),
+)
     app.state.pipeline = pipeline
     print("Pipeline ready!")
     yield
