@@ -1,0 +1,10 @@
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+.env
+data/uploads/*
+data/vectorstore/*
+*.egg-info/
+dist/
+.pytest_cache/
