@@ -1,6 +1,8 @@
 import axios from "axios"
 
-const API = axios.create({ baseURL: "http://localhost:8000" })
+const BASE_URL = import.meta.env.VITE_API_URL || "https://enterprise-ai-knowledge-assistant-v2.onrender.com"
+
+const API = axios.create({ baseURL: BASE_URL })
 
 export const uploadFile = async (file: File) => {
   const form = new FormData()
@@ -31,7 +33,7 @@ export const streamChat = (
   onDone: () => void,
   onError: (err: string) => void
 ) => {
-  fetch("http://localhost:8000/api/chat", {
+  fetch(`${BASE_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question, chat_history: chatHistory, stream: true }),
@@ -39,7 +41,6 @@ export const streamChat = (
     const reader = res.body?.getReader()
     const decoder = new TextDecoder()
     if (!reader) return onError("No response stream")
-
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
