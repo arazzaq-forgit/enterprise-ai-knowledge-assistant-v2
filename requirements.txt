@@ -12,3 +12,4 @@ tiktoken==0.7.0
 numpy==1.26.4
 groq==0.9.0
 PyMuPDF==1.24.5
+httpx==0.27.2
