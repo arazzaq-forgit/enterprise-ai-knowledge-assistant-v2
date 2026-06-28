@@ -20,9 +20,7 @@ export default function UploadZone({ onUpload }: UploadZoneProps) {
     try {
       for (const file of files) {
         const result = await uploadFile(file)
-        if (result.success) {
-          onUpload(result.filename)
-        }
+        if (result.success) onUpload(result.filename)
       }
       setState("success")
       setMessage(files.length === 1 ? "Indexed successfully!" : `${files.length} files indexed!`)
@@ -77,7 +75,7 @@ export default function UploadZone({ onUpload }: UploadZoneProps) {
         <div className="flex flex-col items-center gap-2 py-2">
           <Upload className="w-6 h-6 text-slate-500" />
           <p className="text-xs text-slate-400">{isDragActive ? "Drop files here" : "Drop files or click to upload"}</p>
-          <p className="text-xs text-slate-600">PDF · DOCX · TXT · MD · CSV</p>
+          <p className="text-xs text-slate-600">PDF Â· DOCX Â· TXT Â· MD Â· CSV</p>
         </div>
       )}
     </div>
