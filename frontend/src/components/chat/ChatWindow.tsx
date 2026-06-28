@@ -134,7 +134,7 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
             <Send className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-center text-xs text-slate-600 mt-2">Press Enter to send · Shift+Enter for new line</p>
+        <p className="text-center text-xs text-slate-600 mt-2">Press Enter to send Â· Shift+Enter for new line</p>
       </div>
     </div>
   )
