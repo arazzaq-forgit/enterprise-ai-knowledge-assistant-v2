@@ -26,8 +26,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="DocMind AI API", version="2.0.0", lifespan=lifespan)
 
 app.add_middleware(CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "https://*.netlify.app", "https://*.vercel.app", "https://enterprise-ai-knowledge-assistant-v.vercel.app"],
-    allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"])
 
 app.include_router(upload.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
