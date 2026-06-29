@@ -19,8 +19,9 @@ export default function UploadZone({ onUpload }: UploadZoneProps) {
     setMessage("Indexing document...")
     try {
       for (const file of files) {
-        const result = await uploadFile(file)
-        if (result.success) onUpload(result.filename)
+       const result = await uploadFile(file)
+       console.log("Upload result:", result)
+       if (result.success) onUpload(result.filename)
       }
       setState("success")
       setMessage(files.length === 1 ? "Indexed successfully!" : `${files.length} files indexed!`)
