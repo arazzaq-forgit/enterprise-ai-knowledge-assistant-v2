@@ -32,56 +32,36 @@ DocMind AI is a full-stack **Retrieval-Augmented Generation (RAG)** application 
 
 Upload a document, ask a question, and get an answer grounded in your content — with the exact source and page number cited, streamed back token-by-token like ChatGPT.
 
-┌──────────────────┐      ┌───────────────────┐      ┌──────────────────┐
-│   React Frontend  │ ───▶ │   FastAPI Backend  │ ───▶ │     ChromaDB      │
-│  (TypeScript/Vite) │◀─── │   REST API + SSE   │◀──── │   Vector Store    │
-└──────────────────┘      └───────────────────┘      └──────────────────┘
-Vercel                     Render                    Persistent
-│                          ▲
-▼                          │
-┌───────────────────┐      ┌──────────────────┐
-│    Groq LLM API    │      │ HuggingFace API   │
-│  (Llama 3.1 8B)    │      │   (Embeddings)    │
-└───────────────────┘      └──────────────────┘---
-
 ## 🏗️ Architecture
 
+```mermaid
+graph LR
+    A[React FrontendVercel] -->|REST + SSE| B[FastAPI BackendRender]
+    B --> C[ChromaDBVector Store]
+    B --> D[Groq LLM APILlama 3.1 8B]
+    B --> E[HuggingFace APIEmbeddings]
+    C -.->|retrieved chunks| B
+    D -.->|streamed answer| B
+    E -.->|vectors| C
+```
+
 ### RAG Pipeline Flow
-User uploads document
-│
-▼
-Document Loader (PDF/DOCX/TXT/MD/CSV)
-│
-▼
-Text Chunker (1000 chars, 200 overlap)
-│
-▼
-Embedding Model (HuggingFace API)
-│
-▼
-ChromaDB Vector Store
-│
-═══════════════════════════════════
-│
-User asks a question
-│
-▼
-Embed question → Semantic search ChromaDB
-│
-▼
-Retrieve top-5 relevant chunks
-│
-▼
-Build prompt with context + citation instructions
-│
-▼
-Groq LLM generates answer (streamed)
-│
-▼
-Response + source citations → User
 
----
+```mermaid
+flowchart TD
+    A[User uploads document] --> B[Document LoaderPDF / DOCX / TXT / MD / CSV]
+    B --> C[Text Chunker1000 chars, 200 overlap]
+    C --> D[Embedding ModelHuggingFace API]
+    D --> E[(ChromaDBVector Store)]
 
+    F[User asks a question] --> G[Embed question]
+    G --> H[Semantic searchChromaDB]
+    E -.-> H
+    H --> I[Retrieve top-5 chunks]
+    I --> J[Build prompt+ citation instructions]
+    J --> K[Groq LLMgenerates answer]
+    K --> L[Streamed response+ source citations]
+```
 ## 🛠️ Tech Stack
 
 <table>
