@@ -14,13 +14,15 @@
 ## 📸 Screenshots
 
 ### Landing Page
-![Landing Page](docs/images/hero.png)
+<img width="1920" height="1080" alt="Screenshot (132)" src="https://github.com/user-attachments/assets/8f34888f-293d-451c-acec-4555bf4cc18f" />
+
 
 ### Features
-![Features](docs/images/features.png)
+<img width="1920" height="1080" alt="Screenshot (133)" src="https://github.com/user-attachments/assets/e1da0a05-122e-4327-914f-34c78859210e" />
+
 
 ### AI Workspace — Real-time Q&A with Citations
-![Workspace](docs/images/workspace.png)
+<img width="1920" height="1080" alt="Screenshot (153)" src="https://github.com/user-attachments/assets/765c8514-07ea-44ba-a084-d4ff94ab1f14" />
 
 ---
 
