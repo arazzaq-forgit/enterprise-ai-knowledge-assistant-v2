@@ -195,53 +195,55 @@ Full interactive documentation: [`/docs`](https://enterprise-ai-knowledge-assist
 ---
 
 ## 📁 Project Structure
+
+```text
 enterprise-ai-knowledge-assistant/
-├── backend/                   # FastAPI application layer
-│   ├── main.py                 # App entry point, CORS, lifespan
-│   ├── schemas.py               # Pydantic request/response models
-│   └── routers/
-│       ├── chat.py               # Chat + streaming endpoints
-│       ├── upload.py             # File/URL upload endpoints
-│       └── documents.py          # Document management endpoints
-│
-├── src/                        # Core RAG engine (framework-agnostic)
-│   ├── pipeline/
-│   │   └── rag_pipeline.py        # Orchestrates the full RAG flow
-│   ├── llm/
-│   │   └── llm_client.py           # Groq LLM client (streaming + sync)
-│   ├── embeddings/
-│   │   └── embedding_model.py      # HuggingFace embedding client
-│   ├── chunking/
-│   │   └── chunker.py              # Overlapping text chunker
-│   ├── vectorstore/
-│   │   └── vector_store.py         # ChromaDB interface
-│   ├── retrieval/
-│   │   └── retriever.py            # Semantic retrieval logic
-│   ├── loaders/                   # PDF / DOCX / TXT / URL loaders
-│   ├── prompts/
-│   │   └── prompt_template.py      # Citation-aware prompt templates
-│   └── utils/                     # Logging, helpers
-│
-├── frontend/                   # React application
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── landing/             # Hero, Features, Stats
-│   │   │   ├── layout/              # Navbar, Footer
-│   │   │   ├── chat/                # ChatWindow, Sidebar, Message
-│   │   │   ├── upload/              # UploadZone
-│   │   │   └── ui/                  # GradientBackground
-│   │   ├── pages/                  # Home, Workspace, NotFound
-│   │   ├── services/
-│   │   │   └── api.ts                # Backend API client
-│   │   └── styles/
-│   │       └── globals.css           # Tailwind + design tokens
-│   ├── vercel.json                # SPA routing config
-│   └── package.json
-│
-├── requirements.txt             # Python dependencies
-├── Procfile                     # Render process definition
-└── README.md
----
+  backend/                     FastAPI application layer
+    main.py                    App entry point, CORS, lifespan
+    schemas.py                 Pydantic request/response models
+    routers/
+      chat.py                  Chat + streaming endpoints
+      upload.py                File/URL upload endpoints
+      documents.py             Document management endpoints
+
+  src/                         Core RAG engine
+    pipeline/
+      rag_pipeline.py          Orchestrates the full RAG flow
+    llm/
+      llm_client.py            Groq LLM client (streaming + sync)
+    embeddings/
+      embedding_model.py       HuggingFace embedding client
+    chunking/
+      chunker.py               Overlapping text chunker
+    vectorstore/
+      vector_store.py          ChromaDB interface
+    retrieval/
+      retriever.py             Semantic retrieval logic
+    loaders/                   PDF / DOCX / TXT / URL loaders
+    prompts/
+      prompt_template.py       Citation-aware prompt templates
+    utils/                     Logging, helpers
+
+  frontend/                    React application
+    src/
+      components/
+        landing/                Hero, Features, Stats
+        layout/                 Navbar, Footer
+        chat/                   ChatWindow, Sidebar, Message
+        upload/                 UploadZone
+        ui/                     GradientBackground
+      pages/                   Home, Workspace, NotFound
+      services/
+        api.ts                  Backend API client
+      styles/
+        globals.css             Tailwind + design tokens
+    vercel.json                SPA routing config
+    package.json
+
+  requirements.txt             Python dependencies
+  Procfile                     Render process definition
+  README.md
+```
 
 ## 🧠 Design Decisions
 
