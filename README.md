@@ -1,365 +1,287 @@
-# 🧠 Enterprise AI Knowledge Assistant
+# 🧠 DocMind AI — Enterprise RAG Knowledge Assistant
 
-> A production-ready RAG (Retrieval Augmented Generation) 
-> system built with Ollama, ChromaDB, and Streamlit.
-> 100% local — no API keys, no cost, no data privacy issues!
+> Chat with your documents using AI. Upload PDFs, ask questions in plain English, get instant answers with source citations.
 
-![Python](https://img.shields.io/badge/Python-3.12-blue)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.32-red)
-![Ollama](https://img.shields.io/badge/Ollama-Local_LLM-green)
-![ChromaDB](https://img.shields.io/badge/ChromaDB-VectorDB-purple)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+[![Live Demo](https://img.shields.io/badge/demo-live-success?style=for-the-badge)](https://enterprise-ai-knowledge-assistant-v.vercel.app)
+[![API Docs](https://img.shields.io/badge/API-docs-blue?style=for-the-badge)](https://enterprise-ai-knowledge-assistant-v2.onrender.com/docs)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+
+🔗 **Live App:** [enterprise-ai-knowledge-assistant-v.vercel.app](https://enterprise-ai-knowledge-assistant-v.vercel.app)
+🔗 **API Docs:** [enterprise-ai-knowledge-assistant-v2.onrender.com/docs](https://enterprise-ai-knowledge-assistant-v2.onrender.com/docs)
+
+---
+
+## 📸 Screenshots
+
+### Landing Page
+![Landing Page](docs/images/hero.png)
+
+### Features
+![Features](docs/images/features.png)
+
+### AI Workspace — Real-time Q&A with Citations
+![Workspace](docs/images/workspace.png)
 
 ---
 
-## 📌 What is this?
+## 🎯 Overview
 
-An **Enterprise-grade AI assistant** that lets you:
-- 📄 Upload **PDF, Word, TXT, CSV, MD** documents
-- 🌐 Add **website URLs** as knowledge sources  
-- 💬 Ask **natural language questions** about your docs
-- 🤖 Get **AI-powered answers** with source citations
-- 📋 Generate **instant summaries** of any document
-- 📊 Track **response quality** with evaluation metrics
+DocMind AI is a full-stack **Retrieval-Augmented Generation (RAG)** application built to demonstrate production-grade AI engineering — not a notebook demo, but a deployed product with a real frontend, real backend, and real users in mind.
 
-All running **100% locally** on your machine!
+Upload a document, ask a question, and get an answer grounded in your content — with the exact source and page number cited, streamed back token-by-token like ChatGPT.
 
----
+┌──────────────────┐      ┌───────────────────┐      ┌──────────────────┐
+│   React Frontend  │ ───▶ │   FastAPI Backend  │ ───▶ │     ChromaDB      │
+│  (TypeScript/Vite) │◀─── │   REST API + SSE   │◀──── │   Vector Store    │
+└──────────────────┘      └───────────────────┘      └──────────────────┘
+Vercel                     Render                    Persistent
+│                          ▲
+▼                          │
+┌───────────────────┐      ┌──────────────────┐
+│    Groq LLM API    │      │ HuggingFace API   │
+│  (Llama 3.1 8B)    │      │   (Embeddings)    │
+└───────────────────┘      └──────────────────┘---
 
 ## 🏗️ Architecture
 
-Documents/URLs
-
+### RAG Pipeline Flow
+User uploads document
 │
-
 ▼
-
-┌─────────────────┐
-
-│  Document       │  PDF, DOCX, TXT, CSV, URL
-
-│  Manager        │  Loads all file types
-
-└────────┬────────┘
-
+Document Loader (PDF/DOCX/TXT/MD/CSV)
 │
-
 ▼
-
-┌─────────────────┐
-
-│  Text           │  Splits into 1000 char chunks
-
-│  Chunker        │  with 200 char overlap
-
-└────────┬────────┘
-
+Text Chunker (1000 chars, 200 overlap)
 │
-
 ▼
-
-┌─────────────────┐
-
-│  Embedding      │  nomic-embed-text via Ollama
-
-│  Model          │  Converts text → vectors
-
-└────────┬────────┘
-
+Embedding Model (HuggingFace API)
 │
-
 ▼
-
-┌─────────────────┐
-
-│  ChromaDB       │  Stores vectors locally
-
-│  VectorStore    │  Persists between sessions
-
-└────────┬────────┘
-
+ChromaDB Vector Store
 │
-
-User Question
-
+═══════════════════════════════════
 │
-
+User asks a question
+│
 ▼
-
-┌─────────────────┐
-
-│  Retriever      │  Finds top-5 relevant chunks
-
-│                 │  using cosine similarity
-
-└────────┬────────┘
-
+Embed question → Semantic search ChromaDB
 │
-
 ▼
-
-┌─────────────────┐
-
-│  Prompt         │  Crafts smart prompts
-
-│  Templates      │  for different scenarios
-
-└────────┬────────┘
-
+Retrieve top-5 relevant chunks
 │
-
 ▼
-
-┌─────────────────┐
-
-│  Ollama LLM     │  llama3.2:3b generates
-
-│  Client         │  streaming answers
-
-└────────┬────────┘
-
+Build prompt with context + citation instructions
 │
-
 ▼
-
-┌─────────────────┐
-
-│  Streamlit UI   │  Beautiful dark themed
-
-│  + Evaluator    │  web interface
-
-└─────────────────┘
-
----
-
-## 🚀 Quick Start
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/YOUR_USERNAME/enterprise-ai-knowledge-assistant.git
-cd enterprise-ai-knowledge-assistant
-```
-
-### 2. Create Virtual Environment
-```bash
-python -m venv .venv
-.venv\Scripts\activate   # Windows
-source .venv/bin/activate # Mac/Linux
-```
-
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Install Ollama
-Download from: https://ollama.com/download
-
-### 5. Download AI Models
-```bash
-ollama pull llama3.2:3b
-ollama pull nomic-embed-text
-```
-
-### 6. Run the App
-```bash
-streamlit run app.py
-```
-
-Open browser at: **http://localhost:8501** 🎉
-
----
-
-## 📁 Project Structure
-
-enterprise-ai-knowledge-assistant/
-
+Groq LLM generates answer (streamed)
 │
-
-├── app.py                    # Main Streamlit application
-
-├── configs.yaml              # All project settings
-
-├── requirements.txt          # Python dependencies
-
-├── README.md                 # You are here!
-
-│
-
-├── src/
-
-│   ├── config/
-
-│   │   └── settings.py       # Config loader
-
-│   │
-
-│   ├── loaders/
-
-│   │   ├── pdf_loader.py     # PDF extraction
-
-│   │   ├── docx_loader.py    # Word doc extraction
-
-│   │   ├── txt_loader.py     # Text/CSV extraction
-
-│   │   └── document_manager.py # Master loader + URLs
-
-│   │
-
-│   ├── chunking/
-
-│   │   └── chunker.py        # Smart text splitter
-
-│   │
-
-│   ├── embeddings/
-
-│   │   └── embedding_model.py # Ollama embeddings
-
-│   │
-
-│   ├── vectorstore/
-
-│   │   └── vector_store.py   # ChromaDB manager
-
-│   │
-
-│   ├── llm/
-
-│   │   └── llm_client.py     # Ollama LLM client
-
-│   │
-
-│   ├── retrieval/
-
-│   │   └── retriever.py      # Semantic search
-
-│   │
-
-│   ├── prompts/
-
-│   │   └── prompt_template.py # Prompt engineering
-
-│   │
-
-│   ├── pipeline/
-
-│   │   └── rag_pipeline.py   # Master orchestrator
-
-│   │
-
-│   ├── evaluation/
-
-│   │   └── evaluator.py      # Quality metrics
-
-│   │
-
-│   └── utils/
-
-│       ├── logger.py         # Professional logging
-
-│       ├── helpers.py        # Utility functions
-
-│       └── session_manager.py # Session state
-
-│
-
-├── data/
-
-│   ├── raw/                  # Original documents
-
-│   ├── processed/            # Processed files
-
-│   └── vectorstore/          # ChromaDB storage
-
-│
-
-├── logs/                     # Application logs
-
-└── tests/                    # Unit tests
-
----
-
-## ✨ Features
-
-### 📄 Multi-Format Document Support
-| Format | Support |
-|--------|---------|
-| PDF    | ✅ Full text + metadata extraction |
-| DOCX   | ✅ Paragraphs + tables |
-| TXT    | ✅ Smart encoding detection |
-| MD     | ✅ Markdown documents |
-| CSV    | ✅ Tabular data as text |
-| URLs   | ✅ Web scraping |
-
-### 🤖 AI Capabilities
-- **Streaming Answers** — ChatGPT-like typing effect
-- **Source Citations** — Know exactly which document answered
-- **Multi-doc Search** — Search across all documents at once
-- **Chat History** — Follow-up questions with context
-- **Summarization** — One-click document summaries
-
-### 📊 Quality Evaluation
-Every response is automatically graded on:
-| Metric | Weight | Description |
-|--------|--------|-------------|
-| Relevance | 30% | Answer matches question |
-| Coverage | 20% | Uses available context |
-| Sources | 20% | Cites documents properly |
-| Faithfulness | 20% | No hallucinations |
-| Speed | 10% | Response time |
-
-### 🎨 Beautiful UI
-- Dark themed professional interface
-- Real-time system status monitoring
-- Interactive analytics dashboard
-- Export chat history as text file
-
----
-
-## 🔧 Configuration
-
-All settings in `configs.yaml`:
-
-```yaml
-ollama:
-  llm_model: "llama3.2:3b"      # Change AI model
-  embedding_model: "nomic-embed-text"
-  temperature: 0.1               # 0=focused, 1=creative
-
-vectorstore:
-  chunk_size: 1000               # Characters per chunk
-  chunk_overlap: 200             # Overlap between chunks
-  top_k_results: 5               # Results to retrieve
-```
+▼
+Response + source citations → User
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Technology | Purpose |
-|-----------|---------|
-| Python 3.12 | Core language |
-| Streamlit | Web UI framework |
-| LangChain | LLM orchestration |
-| Ollama | Local LLM runtime |
-| ChromaDB | Vector database |
-| PyMuPDF | PDF processing |
-| python-docx | Word processing |
-| Plotly | Analytics charts |
-| BeautifulSoup4 | Web scraping |
+<table>
+<tr>
+<td valign="top" width="50%">
+
+**Frontend**
+- React 18 + TypeScript
+- Vite 8
+- Tailwind CSS v4
+- React Router
+- Axios
+- Lucide Icons
+
+</td>
+<td valign="top" width="50%">
+
+**Backend**
+- FastAPI
+- ChromaDB (vector store)
+- Groq API (Llama 3.1 8B)
+- HuggingFace Inference API (embeddings)
+- PyPDF / python-docx
+- Server-Sent Events (streaming)
+
+</td>
+</tr>
+</table>
+
+**Deployment:** Vercel (frontend) · Render (backend)
 
 ---
 
-## 👨‍💻 Author
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🔍 **Semantic Search** | Meaning-based retrieval using vector embeddings, not keyword matching |
+| ⚡ **Streaming Responses** | Real-time word-by-word answers via Server-Sent Events |
+| 📎 **Source Citations** | Every answer references the exact document and page number |
+| 📁 **Multi-format Support** | PDF, DOCX, TXT, Markdown, CSV, and web URLs |
+| 🗂️ **Multi-document Q&A** | Query across multiple uploaded documents simultaneously |
+| 📝 **Auto-summarize** | One-click structured summaries of any document |
+| 🎨 **Premium UI** | Aurora gradient background, glassmorphism, smooth animations |
+| 🔒 **Stateless & Secure** | No user data persisted beyond session; documents processed on demand |
+
+---
+
+## 🚀 Getting Started Locally
+
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- A free [Groq API key](https://console.groq.com)
+- A free [HuggingFace token](https://huggingface.co/settings/tokens)
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/arazzaq-forgit/enterprise-ai-knowledge-assistant-v2.git
+cd enterprise-ai-knowledge-assistant-v2/enterprise-ai-knowledge-assistant
+```
+
+### 2. Backend setup
+```bash
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+source .venv/bin/activate       # macOS/Linux
+
+pip install -r requirements.txt
+```
+
+Set environment variables:
+```bash
+# .env or export directly
+GROQ_API_KEY=gsk_your_key_here
+HF_TOKEN=hf_your_token_here
+LLM_MODEL=llama-3.1-8b-instant
+```
+
+Run the backend:
+```bash
+uvicorn backend.main:app --reload --port 8000
+```
+API docs available at `http://localhost:8000/docs`
+
+### 3. Frontend setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+App available at `http://localhost:5173`
+
+---
+
+## 📡 API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/upload` | Upload and index a document |
+| `POST` | `/api/upload/url` | Scrape and index content from a URL |
+| `POST` | `/api/chat` | Ask a question (streaming SSE response) |
+| `POST` | `/api/chat/sources` | Retrieve source chunks for a question |
+| `POST` | `/api/summarize` | Generate a structured summary of a document |
+| `GET` | `/api/documents` | List all indexed documents |
+| `DELETE` | `/api/documents` | Clear the knowledge base |
+| `GET` | `/api/health` | Health check + pipeline stats |
+
+Full interactive documentation: [`/docs`](https://enterprise-ai-knowledge-assistant-v2.onrender.com/docs)
+
+---
+
+## 📁 Project Structure
+enterprise-ai-knowledge-assistant/
+├── backend/                   # FastAPI application layer
+│   ├── main.py                 # App entry point, CORS, lifespan
+│   ├── schemas.py               # Pydantic request/response models
+│   └── routers/
+│       ├── chat.py               # Chat + streaming endpoints
+│       ├── upload.py             # File/URL upload endpoints
+│       └── documents.py          # Document management endpoints
+│
+├── src/                        # Core RAG engine (framework-agnostic)
+│   ├── pipeline/
+│   │   └── rag_pipeline.py        # Orchestrates the full RAG flow
+│   ├── llm/
+│   │   └── llm_client.py           # Groq LLM client (streaming + sync)
+│   ├── embeddings/
+│   │   └── embedding_model.py      # HuggingFace embedding client
+│   ├── chunking/
+│   │   └── chunker.py              # Overlapping text chunker
+│   ├── vectorstore/
+│   │   └── vector_store.py         # ChromaDB interface
+│   ├── retrieval/
+│   │   └── retriever.py            # Semantic retrieval logic
+│   ├── loaders/                   # PDF / DOCX / TXT / URL loaders
+│   ├── prompts/
+│   │   └── prompt_template.py      # Citation-aware prompt templates
+│   └── utils/                     # Logging, helpers
+│
+├── frontend/                   # React application
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── landing/             # Hero, Features, Stats
+│   │   │   ├── layout/              # Navbar, Footer
+│   │   │   ├── chat/                # ChatWindow, Sidebar, Message
+│   │   │   ├── upload/              # UploadZone
+│   │   │   └── ui/                  # GradientBackground
+│   │   ├── pages/                  # Home, Workspace, NotFound
+│   │   ├── services/
+│   │   │   └── api.ts                # Backend API client
+│   │   └── styles/
+│   │       └── globals.css           # Tailwind + design tokens
+│   ├── vercel.json                # SPA routing config
+│   └── package.json
+│
+├── requirements.txt             # Python dependencies
+├── Procfile                     # Render process definition
+└── README.md
+---
+
+## 🧠 Design Decisions
+
+**Why Groq instead of OpenAI?**
+Groq offers free, extremely fast inference (LPU-based) with no credit card required — ideal for a portfolio project that needs to stay live and free indefinitely.
+
+**Why HuggingFace Inference API for embeddings instead of local models?**
+Running `sentence-transformers` locally on Render's free tier exceeds the 512MB RAM limit. Offloading embedding computation to HuggingFace's free API keeps the backend lightweight and deployable on free infrastructure.
+
+**Why ChromaDB?**
+Zero-config, file-based persistence — no external database service required, which keeps the deployment footprint minimal while still supporting proper cosine-similarity vector search.
+
+**Why Server-Sent Events over WebSockets?**
+SSE is simpler to implement and sufficient for one-directional streaming (server → client), avoiding the complexity of full-duplex WebSocket connections for a use case that doesn't need them.
+
+---
+
+## 🔮 Future Improvements
+
+- [ ] Hybrid search (BM25 + semantic) for improved retrieval precision
+- [ ] Cross-encoder re-ranking of retrieved chunks
+- [ ] Persistent chat history per session
+- [ ] Dark/light theme toggle
+- [ ] Docker Compose setup for one-command local deployment
+- [ ] Automated retrieval evaluation suite (precision@k, recall@k)
+
+---
+
+## 👤 Author
 
 **Mohd Abdul Razzaq**
-- 🎓 Data Science & AI-ML
-- 💼 Building production-ready AI systems
-- 🌟 Passionate about making AI accessible
+
+[![GitHub](https://img.shields.io/badge/GitHub-arazzaq--forgit-181717?style=flat&logo=github)](https://github.com/arazzaq-forgit)
 
 ---
 
-## 📜 License
+## 📄 License
 
-MIT License — feel free to use for learning!
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<p align="center">
+  <i>If you found this project useful or interesting, consider giving it a ⭐</i>
+</p>
