@@ -1,6 +1,5 @@
 """
 Embedding Model using HuggingFace Inference API.
-Free, lightweight, no RAM issues.
 """
 import os
 import requests
@@ -13,7 +12,7 @@ class EmbeddingModel:
     def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", base_url: str = None):
         self.model_name = "sentence-transformers/all-MiniLM-L6-v2"
         self.api_token = os.environ.get("HF_TOKEN", "")
-        self.api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self.model_name}"
+        self.api_url = f"https://router.huggingface.co/hf-inference/models/{self.model_name}/pipeline/feature-extraction"
         self.vector_size = 384
         logger.info(f"Embedding model ready: HuggingFace/{self.model_name}")
 
