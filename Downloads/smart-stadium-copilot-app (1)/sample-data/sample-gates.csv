@@ -1,0 +1,7 @@
+id,name,occ,wait,accessible
+A,Gate A - North,42,3,true
+B,Gate B - East,68,9,true
+C,Gate C - South,91,17,false
+D,Gate D - West,30,2,true
+E,Gate E - VIP,20,1,true
+F,Gate F - Media,55,6,true

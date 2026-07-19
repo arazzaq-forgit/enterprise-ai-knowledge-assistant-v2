@@ -1,0 +1,8 @@
+[
+  { "id": "A", "name": "Gate A — North", "occ": 42, "wait": 3, "accessible": true },
+  { "id": "B", "name": "Gate B — East", "occ": 68, "wait": 9, "accessible": true },
+  { "id": "C", "name": "Gate C — South", "occ": 91, "wait": 17, "accessible": false },
+  { "id": "D", "name": "Gate D — West", "occ": 30, "wait": 2, "accessible": true },
+  { "id": "E", "name": "Gate E — VIP", "occ": 20, "wait": 1, "accessible": true },
+  { "id": "F", "name": "Gate F — Media", "occ": 55, "wait": 6, "accessible": true }
+]
