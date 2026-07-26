@@ -1,0 +1,356 @@
+"""
+RAG Pipeline for Enterprise AI Knowledge Assistant.
+The BRAIN that connects all modules together.
+
+Phase 1 Upgrades:
+- Semantic chunking (replaces fixed-size)
+- Hybrid search BM25 + Vector (replaces pure vector)
+- MMR diversity retrieval (removes duplicate chunks)
+- BM25 index rebuilt after every document indexed
+"""
+
+import os
+from typing import List, Dict, Any, Optional, Generator
+from src.loaders.document_manager import DocumentManager
+from src.chunking.chunker import TextChunker
+from src.embeddings.embedding_model import EmbeddingModel
+from src.vectorstore.vector_store import VectorStore
+from src.llm.llm_client import LLMClient
+from src.retrieval.retriever import Retriever
+from src.prompts.prompt_template import PromptTemplates
+from src.utils.logger import get_pipeline_logger
+
+logger = get_pipeline_logger()
+
+
+class RAGPipeline:
+    """
+    Master pipeline that orchestrates the entire RAG system.
+
+    TWO main flows:
+
+    INDEXING FLOW:
+    Documents -> DocumentManager -> TextChunker -> EmbeddingModel -> VectorStore
+
+    QUERYING FLOW:
+    Question -> EmbeddingModel -> HybridRetriever -> PromptTemplates -> LLMClient -> Answer
+    """
+
+    def __init__(self,
+                 chunk_size: int = 1000,
+                 chunk_overlap: int = 200,
+                 top_k: int = 5,
+                 persist_dir: str = "data/vectorstore",
+                 llm_model: str = "llama3.2:3b",
+                 embed_model: str = "nomic-embed-text",
+                 base_url: str = "http://localhost:11434"):
+
+        logger.info("Initializing RAG Pipeline...")
+
+        self.doc_manager = DocumentManager()
+
+        self.chunker = TextChunker(
+            chunk_size    = chunk_size,
+            chunk_overlap = chunk_overlap
+        )
+
+        self.embedding_model = EmbeddingModel(
+            model_name = embed_model,
+            base_url   = base_url
+        )
+
+        self.vector_store = VectorStore(
+            persist_directory = persist_dir,
+            collection_name   = "knowledge_base"
+        )
+
+        self.llm = LLMClient(
+            model_name  = os.getenv("LLM_MODEL", llm_model),
+            base_url    = base_url,
+            temperature = 0.1,
+            max_tokens  = 2048
+        )
+
+        self.retriever = Retriever(
+            embedding_model = self.embedding_model,
+            vector_store    = self.vector_store,
+            top_k           = top_k,
+            min_similarity  = 0.0
+        )
+
+        self.prompts = PromptTemplates()
+        self.loaded_docs: List[str] = []
+
+        # Build BM25 index from any existing documents
+        self.retriever.build_bm25_index()
+
+        logger.info("RAG Pipeline ready!")
+
+    # ════════════════════════════════════════════════════════════
+    # INDEXING FLOW
+    # ════════════════════════════════════════════════════════════
+
+    def index_file(self,
+                   file_bytes: bytes,
+                   filename: str) -> Dict[str, Any]:
+        """Index an uploaded file into the vector store."""
+        logger.info(f"Indexing file: {filename}")
+
+        try:
+            # Step 1: Load document
+            documents = self.doc_manager.load_from_bytes(
+                file_bytes, filename
+            )
+
+            if not documents:
+                return {
+                    "success":  False,
+                    "filename": filename,
+                    "error":    "No content extracted"
+                }
+
+            # Step 2: Semantic chunking
+            # Documents have {content, metadata} format
+            # Convert to format chunker expects
+            chunks_input = [
+                {
+                    "text":     doc.get("content", ""),
+                    "metadata": doc.get("metadata", {})
+                }
+                for doc in documents
+            ]
+            chunks = self.chunker.chunk_documents(chunks_input)
+
+            if not chunks:
+                return {
+                    "success":  False,
+                    "filename": filename,
+                    "error":    "No chunks created"
+                }
+
+            # Step 3: Create embeddings
+            logger.info(f"Embedding {len(chunks)} chunks...")
+            texts      = [c["text"] for c in chunks]
+            embeddings = self.embedding_model.embed_batch(texts)
+
+            # Step 4: Store in VectorStore
+            # Convert chunks to format vector store expects
+            vs_chunks = [
+                {
+                    "content":  c["text"],
+                    "metadata": {
+                        **c.get("metadata", {}),
+                        "source":      filename,
+                        "chunk_index": c.get("chunk_index", i),
+                    }
+                }
+                for i, c in enumerate(chunks)
+            ]
+            self.vector_store.add_documents(vs_chunks, embeddings)
+
+            # Track loaded doc
+            if filename not in self.loaded_docs:
+                self.loaded_docs.append(filename)
+
+            # Rebuild BM25 index for hybrid search
+            self.retriever.build_bm25_index()
+
+            result = {
+                "success":     True,
+                "filename":    filename,
+                "pages":       len(documents),
+                "chunks":      len(chunks),
+                "total_words": sum(len(c["text"].split()) for c in chunks),
+            }
+
+            logger.info(f"Indexed {filename}: {len(chunks)} chunks")
+            return result
+
+        except Exception as e:
+            logger.error(f"Failed to index {filename}: {str(e)}")
+            return {
+                "success":  False,
+                "filename": filename,
+                "error":    str(e)
+            }
+
+    def index_url(self, url: str) -> Dict[str, Any]:
+        """Index content from a URL."""
+        logger.info(f"Indexing URL: {url}")
+
+        try:
+            documents = self.doc_manager.load_url(url)
+
+            if not documents:
+                return {
+                    "success": False,
+                    "url":     url,
+                    "error":   "No content found at URL"
+                }
+
+            chunks_input = [
+                {
+                    "text":     doc.get("content", ""),
+                    "metadata": doc.get("metadata", {})
+                }
+                for doc in documents
+            ]
+            chunks = self.chunker.chunk_documents(chunks_input)
+            texts  = [c["text"] for c in chunks]
+            embeddings = self.embedding_model.embed_batch(texts)
+
+            vs_chunks = [
+                {
+                    "content":  c["text"],
+                    "metadata": {
+                        **c.get("metadata", {}),
+                        "source":      url,
+                        "chunk_index": c.get("chunk_index", i),
+                    }
+                }
+                for i, c in enumerate(chunks)
+            ]
+            self.vector_store.add_documents(vs_chunks, embeddings)
+
+            if url not in self.loaded_docs:
+                self.loaded_docs.append(url)
+
+            # Rebuild BM25 index
+            self.retriever.build_bm25_index()
+
+            logger.info(f"Indexed URL: {url} ({len(chunks)} chunks)")
+            return {
+                "success": True,
+                "url":     url,
+                "chunks":  len(chunks),
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to index URL {url}: {str(e)}")
+            return {
+                "success": False,
+                "url":     url,
+                "error":   str(e)
+            }
+
+    # ════════════════════════════════════════════════════════════
+    # QUERYING FLOW
+    # ════════════════════════════════════════════════════════════
+
+    def ask(self,
+            question: str,
+            chat_history: Optional[List[Dict]] = None,
+            stream: bool = True
+            ) -> Generator[str, None, None]:
+        """Answer a question using RAG."""
+        logger.info(f"Question: {question[:60]}...")
+
+        try:
+            # Check if docs loaded
+            if self.vector_store.count() == 0:
+                yield (
+                    "No documents loaded yet!\n\n"
+                    "Please upload documents using the sidebar first."
+                )
+                return
+
+            # Retrieve relevant chunks (hybrid search + MMR)
+            context = self.retriever.get_context_text(
+                question, max_chars=4000
+            )
+
+            # Build prompt
+            if not context:
+                prompt = PromptTemplates.no_context_prompt(question)
+            elif chat_history and len(chat_history) > 0:
+                prompt = PromptTemplates.followup_prompt(
+                    question, context, chat_history
+                )
+            elif len(self.loaded_docs) > 1:
+                prompt = PromptTemplates.multi_doc_prompt(
+                    question, context, self.loaded_docs
+                )
+            else:
+                prompt = PromptTemplates.rag_prompt(
+                    question, context
+                )
+
+            # Generate answer
+            if stream:
+                yield from self.llm.generate_stream(
+                    prompt        = prompt,
+                    system_prompt = PromptTemplates.SYSTEM_PROMPT
+                )
+            else:
+                answer = self.llm.generate(
+                    prompt        = prompt,
+                    system_prompt = PromptTemplates.SYSTEM_PROMPT
+                )
+                yield answer
+
+        except Exception as e:
+            logger.error(f"Pipeline error: {str(e)}")
+            yield f"Error: {str(e)}"
+
+    def summarize(self,
+                  filename: str) -> Generator[str, None, None]:
+        """Summarize a specific loaded document."""
+        logger.info(f"Summarizing: {filename}")
+
+        try:
+            results = self.vector_store.search(
+                query_embedding = self.embedding_model.embed_text(
+                    "summary overview main points key findings"
+                ),
+                top_k = 10,
+            )
+
+            if not results:
+                yield f"No content found for {filename}"
+                return
+
+            doc_text = "\n\n".join([r["content"] for r in results])
+            prompt   = PromptTemplates.summary_prompt(
+                doc_text, filename
+            )
+            yield from self.llm.generate_stream(prompt)
+
+        except Exception as e:
+            logger.error(f"Summary failed: {str(e)}")
+            yield f"Summary error: {str(e)}"
+
+    def get_sources(self,
+                    question: str) -> List[Dict[str, Any]]:
+        """Get source documents for a question."""
+        return self.retriever.retrieve(question)
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get pipeline statistics."""
+        vs_stats = self.vector_store.get_stats()
+        return {
+            "loaded_documents": len(self.loaded_docs),
+            "document_names":   self.loaded_docs,
+            "total_chunks":     vs_stats.get("total_chunks", 0),
+            "llm_model":        self.llm.model_name,
+            "embed_model":      self.embedding_model.model_name,
+            "llm_available":    self.llm.is_available(),
+        }
+
+    def clear_knowledge_base(self) -> bool:
+        """Clear all stored documents."""
+        self.vector_store.clear()
+        self.loaded_docs = []
+        self.retriever._bm25_index  = None
+        self.retriever._bm25_corpus = []
+        self.retriever._bm25_docs   = []
+        logger.info("Knowledge base cleared")
+        return True
+
+    def check_system(self) -> Dict[str, bool]:
+        """Check all system components."""
+        return {
+            "llm":         self.llm.is_available(),
+            "embeddings":  self.embedding_model.is_available(),
+            "vector_store": self.vector_store.count() > 0,
+            "docs_loaded": len(self.loaded_docs) > 0,
+        }

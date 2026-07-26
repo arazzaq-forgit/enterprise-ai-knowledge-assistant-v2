@@ -1,0 +1,18 @@
+Set-Content -Path .gitignore -Value '__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+data/uploads/*
+data/vectorstore/*
+!data/uploads/.gitkeep
+!data/vectorstore/.gitkeep
+node_modules/
+frontend/dist/
+frontend/tsconfig.app.tsbuildinfo
+*.egg-info/
+.pytest_cache/
+logs/
+desktop.ini
+assets/desktop.ini
+assets/images/desktop.ini'
