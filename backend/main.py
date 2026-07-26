@@ -1,9 +1,4 @@
-import sys
 import os
-
-# Add current directory to path
-sys.path.insert(0, os.getcwd())
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
