@@ -1,4 +1,12 @@
 import os
+import sys
+
+# Render's working directory is /opt/render/project/src/
+# Our code is already there, so no path manipulation needed
+# Just ensure current directory is in path
+if os.getcwd() not in sys.path:
+    sys.path.insert(0, os.getcwd())
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
