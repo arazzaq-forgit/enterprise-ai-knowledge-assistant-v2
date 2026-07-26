@@ -2,7 +2,7 @@ import sys
 import os
 from pathlib import Path
 
-# Add project root to path
+# Fix path — add project root so 'src' is importable directly
 ROOT_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
@@ -18,7 +18,9 @@ pipeline = None
 async def lifespan(app: FastAPI):
     global pipeline
     print("Starting RAG pipeline...")
-    pipeline = RAGPipeline()
+    pipeline = RAGPipeline(
+        llm_model=os.getenv("LLM_MODEL", "llama-3.1-8b-instant"),
+    )
     app.state.pipeline = pipeline
     print("Pipeline ready!")
     yield
@@ -27,8 +29,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="DocMind AI API", version="2.0.0", lifespan=lifespan)
 
 app.add_middleware(CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "https://*.netlify.app"],
-    allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"])
 
 app.include_router(upload.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
