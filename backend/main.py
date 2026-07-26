@@ -1,10 +1,8 @@
 import sys
 import os
-from pathlib import Path
 
-# Fix path — add project root so 'src' is importable directly
-ROOT_DIR = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT_DIR))
+# Add current directory to path
+sys.path.insert(0, os.getcwd())
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
