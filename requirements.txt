@@ -1,4 +1,4 @@
-fastapi==0.115.0
+Set-Content -Path requirements.txt -Value 'fastapi==0.115.0
 uvicorn==0.30.6
 python-multipart==0.0.9
 pydantic==2.7.4
@@ -12,4 +12,4 @@ tiktoken==0.7.0
 numpy==1.26.4
 groq==0.9.0
 nltk==3.8.1
-rank-bm25==0.2.2
+rank-bm25==0.2.2'
