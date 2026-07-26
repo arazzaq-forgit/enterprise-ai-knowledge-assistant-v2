@@ -1,0 +1,69 @@
+2026-06-26 07:21:38 | INFO     | Pipeline | 🚀 Initializing RAG Pipeline...
+2026-06-26 07:21:38 | INFO     | Chunker | Chunker ready — size=1000, overlap=200
+2026-06-26 07:21:38 | INFO     | Embeddings | Embedding model ready: nomic-embed-text
+2026-06-26 07:21:40 | INFO     | VectorStore | ✅ VectorStore ready — collection: knowledge_base (100 chunks stored)
+2026-06-26 07:21:40 | INFO     | LLM | LLM Client ready: llama3.2:3b
+2026-06-26 07:21:40 | INFO     | Retriever | Retriever ready — top_k=5, min_similarity=0.3
+2026-06-26 07:21:40 | INFO     | Pipeline | ✅ RAG Pipeline ready!
+2026-06-26 07:25:41 | INFO     | Pipeline | ❓ Question: hello how is the weather today...
+2026-06-26 07:25:41 | INFO     | Retriever | Retrieving for: 'hello how is the weather today...'
+2026-06-26 07:25:51 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-26 07:25:51 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-26 07:25:51 | INFO     | Retriever | Context prepared: 3207 chars from 5 chunks
+2026-06-26 07:26:51 | INFO     | Pipeline | ❓ Question: okay tell me quick recap of 12 rules to code...
+2026-06-26 07:26:51 | INFO     | Retriever | Retrieving for: 'okay tell me quick recap of 12 rules to code...'
+2026-06-26 07:26:54 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-26 07:26:54 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-26 07:26:54 | INFO     | Retriever | Context prepared: 1002 chars from 5 chunks
+2026-06-26 07:29:40 | INFO     | Pipeline | 📄 Indexing file: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-26 07:29:40 | INFO     | Loader | Loading uploaded file: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-26 07:29:40 | INFO     | Loader | Loading PDF from bytes: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-26 07:29:40 | INFO     | Loader | Extracted 51 pages from 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-26 07:29:40 | INFO     | Chunker | Split 51 documents into 78 chunks
+2026-06-26 07:29:40 | INFO     | Pipeline | Creating embeddings for 78 chunks...
+2026-06-26 07:29:40 | INFO     | Embeddings | Embedding 78 texts in batches of 10...
+2026-06-26 07:30:03 | INFO     | Embeddings | Embedded 10/78 texts
+2026-06-26 07:30:25 | INFO     | Embeddings | Embedded 20/78 texts
+2026-06-26 07:30:47 | INFO     | Embeddings | Embedded 30/78 texts
+2026-06-26 07:31:09 | INFO     | Embeddings | Embedded 40/78 texts
+2026-06-26 07:31:31 | INFO     | Embeddings | Embedded 50/78 texts
+2026-06-26 07:31:52 | INFO     | Embeddings | Embedded 60/78 texts
+2026-06-26 07:32:14 | INFO     | Embeddings | Embedded 70/78 texts
+2026-06-26 07:32:32 | INFO     | Embeddings | Embedded 78/78 texts
+2026-06-26 07:32:32 | INFO     | Embeddings | Batch embedding complete: 78 vectors
+2026-06-26 07:32:32 | INFO     | VectorStore | Stored 78/78 chunks
+2026-06-26 07:32:32 | INFO     | VectorStore | ✅ Total stored: 78 chunks
+2026-06-26 07:32:32 | INFO     | Pipeline | ✅ Indexed 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf: 78 chunks stored
+2026-06-26 07:39:39 | INFO     | Pipeline | 🚀 Initializing RAG Pipeline...
+2026-06-26 07:39:39 | INFO     | Chunker | Chunker ready — size=1000, overlap=200
+2026-06-26 07:39:39 | INFO     | Embeddings | Embedding model ready: nomic-embed-text
+2026-06-26 07:39:39 | INFO     | VectorStore | ✅ VectorStore ready — collection: knowledge_base (178 chunks stored)
+2026-06-26 07:48:20 | INFO     | Pipeline | 🚀 Initializing RAG Pipeline...
+2026-06-26 07:48:20 | INFO     | Chunker | Chunker ready — size=1000, overlap=200
+2026-06-26 07:48:20 | INFO     | Embeddings | Embedding model ready: nomic-embed-text
+2026-06-26 07:48:20 | INFO     | VectorStore | ✅ VectorStore ready — collection: knowledge_base (178 chunks stored)
+2026-06-26 07:49:59 | INFO     | Pipeline | 🚀 Initializing RAG Pipeline...
+2026-06-26 07:49:59 | INFO     | Chunker | Chunker ready — size=1000, overlap=200
+2026-06-26 07:49:59 | INFO     | Embeddings | Embedding model ready: nomic-embed-text
+2026-06-26 07:49:59 | INFO     | VectorStore | ✅ VectorStore ready — collection: knowledge_base (178 chunks stored)
+2026-06-26 07:49:59 | INFO     | LLMClient | LLM ready: Groq/llama3.2:3b
+2026-06-26 07:49:59 | INFO     | Retriever | Retriever ready — top_k=5, min_similarity=0.3
+2026-06-26 07:49:59 | INFO     | Pipeline | ✅ RAG Pipeline ready!
+2026-06-26 07:51:12 | INFO     | Pipeline | 📄 Indexing file: Generative_AI_Technical_Seminar.pdf
+2026-06-26 07:51:12 | INFO     | Loader | Loading uploaded file: Generative_AI_Technical_Seminar.pdf
+2026-06-26 07:51:12 | INFO     | Loader | Loading PDF from bytes: Generative_AI_Technical_Seminar.pdf
+2026-06-26 07:51:12 | INFO     | Loader | Extracted 10 pages from Generative_AI_Technical_Seminar.pdf
+2026-06-26 07:51:12 | INFO     | Chunker | Split 10 documents into 10 chunks
+2026-06-26 07:51:12 | INFO     | Pipeline | Creating embeddings for 10 chunks...
+2026-06-26 07:51:12 | INFO     | Embeddings | Embedding 10 texts in batches of 10...
+2026-06-26 07:51:38 | INFO     | Embeddings | Embedded 10/10 texts
+2026-06-26 07:51:38 | INFO     | Embeddings | Batch embedding complete: 10 vectors
+2026-06-26 07:51:38 | INFO     | VectorStore | Stored 10/10 chunks
+2026-06-26 07:51:38 | INFO     | VectorStore | ✅ Total stored: 10 chunks
+2026-06-26 07:51:38 | INFO     | Pipeline | ✅ Indexed Generative_AI_Technical_Seminar.pdf: 10 chunks stored
+2026-06-26 07:51:43 | INFO     | Pipeline | ❓ Question: give the context...
+2026-06-26 07:51:43 | INFO     | Retriever | Retrieving for: 'give the context...'
+2026-06-26 07:51:45 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-26 07:51:45 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-26 07:51:45 | INFO     | Retriever | Context prepared: 2659 chars from 5 chunks
+2026-06-26 07:51:45 | ERROR    | Pipeline | Pipeline error: 'LLMClient' object has no attribute 'generate_stream'

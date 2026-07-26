@@ -1,0 +1,32 @@
+2026-06-28 10:31:34 | INFO     | Pipeline | 🚀 Initializing RAG Pipeline...
+2026-06-28 10:31:34 | INFO     | Chunker | Chunker ready — size=1000, overlap=200
+2026-06-28 10:31:34 | INFO     | Embeddings | Embedding model ready: nomic-embed-text
+2026-06-28 10:31:35 | INFO     | VectorStore | ✅ VectorStore ready — collection: knowledge_base (188 chunks stored)
+2026-06-28 10:31:36 | INFO     | LLMClient | LLM ready: Groq/llama3.2:3b
+2026-06-28 10:31:36 | INFO     | Retriever | Retriever ready — top_k=5, min_similarity=0.3
+2026-06-28 10:31:36 | INFO     | Pipeline | ✅ RAG Pipeline ready!
+2026-06-28 10:32:09 | INFO     | Pipeline | 📄 Indexing file: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-28 10:32:09 | INFO     | Loader | Loading uploaded file: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-28 10:32:09 | INFO     | Loader | Loading PDF from bytes: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-28 10:32:09 | INFO     | Loader | Extracted 51 pages from 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-28 10:32:09 | INFO     | Chunker | Split 51 documents into 78 chunks
+2026-06-28 10:32:09 | INFO     | Pipeline | Creating embeddings for 78 chunks...
+2026-06-28 10:32:09 | INFO     | Embeddings | Embedding 78 texts in batches of 10...
+2026-06-28 10:32:34 | INFO     | Embeddings | Embedded 10/78 texts
+2026-06-28 10:32:56 | INFO     | Embeddings | Embedded 20/78 texts
+2026-06-28 10:33:18 | INFO     | Embeddings | Embedded 30/78 texts
+2026-06-28 10:33:40 | INFO     | Embeddings | Embedded 40/78 texts
+2026-06-28 10:34:02 | INFO     | Embeddings | Embedded 50/78 texts
+2026-06-28 10:34:24 | INFO     | Embeddings | Embedded 60/78 texts
+2026-06-28 10:34:45 | INFO     | Embeddings | Embedded 70/78 texts
+2026-06-28 10:35:03 | INFO     | Embeddings | Embedded 78/78 texts
+2026-06-28 10:35:03 | INFO     | Embeddings | Batch embedding complete: 78 vectors
+2026-06-28 10:35:03 | INFO     | VectorStore | Stored 78/78 chunks
+2026-06-28 10:35:03 | INFO     | VectorStore | ✅ Total stored: 78 chunks
+2026-06-28 10:35:03 | INFO     | Pipeline | ✅ Indexed 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf: 78 chunks stored
+2026-06-28 10:35:07 | INFO     | Pipeline | ❓ Question: explain about the 12 rules for coding...
+2026-06-28 10:35:07 | INFO     | Retriever | Retrieving for: 'explain about the 12 rules for coding...'
+2026-06-28 10:35:09 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-28 10:35:09 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-28 10:35:09 | INFO     | Retriever | Context prepared: 1067 chars from 5 chunks
+2026-06-28 10:35:09 | ERROR    | Pipeline | Pipeline error: 'LLMClient' object has no attribute 'generate_stream'

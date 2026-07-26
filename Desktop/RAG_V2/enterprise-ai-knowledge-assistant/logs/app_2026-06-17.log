@@ -1,0 +1,15 @@
+2026-06-17 21:13:42 | INFO     | SessionManager | New session started: 2026-06-17 21:13:42
+2026-06-17 21:13:42 | INFO     | Evaluator | RAG Evaluator initialized
+2026-06-17 21:13:42 | INFO     | Pipeline | 🚀 Initializing RAG Pipeline...
+2026-06-17 21:13:42 | INFO     | Chunker | Chunker ready — size=1000, overlap=200
+2026-06-17 21:13:42 | INFO     | Embeddings | Embedding model ready: nomic-embed-text
+2026-06-17 21:13:43 | INFO     | VectorStore | ✅ VectorStore ready — collection: knowledge_base (0 chunks stored)
+2026-06-17 21:13:43 | INFO     | LLM | LLM Client ready: llama3.2:3b
+2026-06-17 21:13:43 | INFO     | Retriever | Retriever ready — top_k=5, min_similarity=0.3
+2026-06-17 21:13:43 | INFO     | Pipeline | ✅ RAG Pipeline ready!
+2026-06-17 21:13:45 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-17 21:13:47 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-17 21:13:48 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-17 21:13:48 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-17 21:13:48 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-17 21:13:50 | INFO     | LLM | ✅ llama3.2:3b is available

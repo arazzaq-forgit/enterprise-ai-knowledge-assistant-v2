@@ -1,0 +1,227 @@
+2026-06-18 00:15:05 | INFO     | SessionManager | New session started: 2026-06-18 00:15:05
+2026-06-18 00:15:05 | INFO     | Evaluator | RAG Evaluator initialized
+2026-06-18 00:15:05 | INFO     | Pipeline | 🚀 Initializing RAG Pipeline...
+2026-06-18 00:15:05 | INFO     | Chunker | Chunker ready — size=1000, overlap=200
+2026-06-18 00:15:05 | INFO     | Embeddings | Embedding model ready: nomic-embed-text
+2026-06-18 00:15:05 | INFO     | VectorStore | ✅ VectorStore ready — collection: knowledge_base (0 chunks stored)
+2026-06-18 00:15:05 | INFO     | LLM | LLM Client ready: llama3.2:3b
+2026-06-18 00:15:05 | INFO     | Retriever | Retriever ready — top_k=5, min_similarity=0.3
+2026-06-18 00:15:05 | INFO     | Pipeline | ✅ RAG Pipeline ready!
+2026-06-18 00:15:07 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:15:09 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:15:09 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:15:09 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:15:09 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:15:11 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:17:24 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:17:26 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:17:26 | INFO     | Pipeline | 📄 Indexing file: README.md
+2026-06-18 00:17:26 | INFO     | Loader | Loading uploaded file: README.md
+2026-06-18 00:17:26 | INFO     | Loader | Loading text file from bytes: README.md
+2026-06-18 00:17:26 | INFO     | Chunker | Split 1 documents into 4 chunks
+2026-06-18 00:17:26 | INFO     | Pipeline | Creating embeddings for 4 chunks...
+2026-06-18 00:17:26 | INFO     | Embeddings | Embedding 4 texts in batches of 10...
+2026-06-18 00:17:40 | INFO     | Embeddings | Embedded 4/4 texts
+2026-06-18 00:17:40 | INFO     | Embeddings | Batch embedding complete: 4 vectors
+2026-06-18 00:17:40 | INFO     | VectorStore | Stored 4/4 chunks
+2026-06-18 00:17:40 | INFO     | VectorStore | ✅ Total stored: 4 chunks
+2026-06-18 00:17:40 | INFO     | Pipeline | ✅ Indexed README.md: 4 chunks stored
+2026-06-18 00:17:40 | INFO     | SessionManager | File tracked: README.md (4 chunks)
+2026-06-18 00:17:40 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:17:40 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:17:40 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:17:42 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:18:20 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:18:22 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:18:22 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:18:22 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:18:22 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:18:22 | INFO     | Pipeline | ❓ Question: what are your views on my README...
+2026-06-18 00:18:22 | INFO     | Retriever | Retrieving for: 'what are your views on my README...'
+2026-06-18 00:18:25 | INFO     | VectorStore | Found 4 relevant chunks
+2026-06-18 00:18:25 | INFO     | Retriever | Retrieved 4 relevant chunks (similarity >= 0.3)
+2026-06-18 00:18:25 | INFO     | Retriever | Context prepared: 3445 chars from 4 chunks
+2026-06-18 00:18:42 | INFO     | Retriever | Retrieving for: 'what are your views on my README...'
+2026-06-18 00:18:44 | INFO     | VectorStore | Found 4 relevant chunks
+2026-06-18 00:18:44 | INFO     | Retriever | Retrieved 4 relevant chunks (similarity >= 0.3)
+2026-06-18 00:18:44 | INFO     | Evaluator | Evaluating response for: 'what are your views on my README...'
+2026-06-18 00:18:44 | INFO     | Evaluator | Evaluation complete: overall=0.648, grade=B  📊
+2026-06-18 00:18:44 | INFO     | SessionManager | Message #1 added to chat history
+2026-06-18 00:18:46 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:18:48 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:18:48 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:18:48 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:18:48 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:18:50 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:19:38 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:19:40 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:19:40 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:19:40 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:19:40 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:19:42 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:20:31 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:20:33 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:20:33 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:20:33 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:20:33 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:20:33 | INFO     | Pipeline | ❓ Question: what are your views on my README for my RAG project...
+2026-06-18 00:20:33 | INFO     | Retriever | Retrieving for: 'what are your views on my README for my RAG projec...'
+2026-06-18 00:20:36 | INFO     | VectorStore | Found 4 relevant chunks
+2026-06-18 00:20:36 | INFO     | Retriever | Retrieved 4 relevant chunks (similarity >= 0.3)
+2026-06-18 00:20:36 | INFO     | Retriever | Context prepared: 3445 chars from 4 chunks
+2026-06-18 00:20:48 | INFO     | Retriever | Retrieving for: 'what are your views on my README for my RAG projec...'
+2026-06-18 00:20:50 | INFO     | VectorStore | Found 4 relevant chunks
+2026-06-18 00:20:50 | INFO     | Retriever | Retrieved 4 relevant chunks (similarity >= 0.3)
+2026-06-18 00:20:50 | INFO     | Evaluator | Evaluating response for: 'what are your views on my README for my ...'
+2026-06-18 00:20:50 | INFO     | Evaluator | Evaluation complete: overall=0.687, grade=B  📊
+2026-06-18 00:20:50 | INFO     | SessionManager | Message #2 added to chat history
+2026-06-18 00:20:52 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:20:54 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:20:54 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:20:54 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:20:54 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:20:56 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:21:05 | INFO     | SessionManager | New session started: 2026-06-18 00:21:05
+2026-06-18 00:21:05 | INFO     | Evaluator | RAG Evaluator initialized
+2026-06-18 00:21:07 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:21:09 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:21:09 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:21:09 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:21:09 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:21:11 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:21:19 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:21:21 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:21:22 | INFO     | Pipeline | 📄 Indexing file: README.md
+2026-06-18 00:21:22 | INFO     | Loader | Loading uploaded file: README.md
+2026-06-18 00:21:22 | INFO     | Loader | Loading text file from bytes: README.md
+2026-06-18 00:21:22 | INFO     | Chunker | Split 1 documents into 9 chunks
+2026-06-18 00:21:22 | INFO     | Pipeline | Creating embeddings for 9 chunks...
+2026-06-18 00:21:22 | INFO     | Embeddings | Embedding 9 texts in batches of 10...
+2026-06-18 00:21:43 | INFO     | Embeddings | Embedded 9/9 texts
+2026-06-18 00:21:43 | INFO     | Embeddings | Batch embedding complete: 9 vectors
+2026-06-18 00:21:43 | INFO     | VectorStore | Stored 9/9 chunks
+2026-06-18 00:21:43 | INFO     | VectorStore | ✅ Total stored: 9 chunks
+2026-06-18 00:21:43 | INFO     | Pipeline | ✅ Indexed README.md: 9 chunks stored
+2026-06-18 00:21:43 | INFO     | SessionManager | File tracked: README.md (9 chunks)
+2026-06-18 00:21:43 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:21:43 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:21:43 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:21:45 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:22:25 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:22:27 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:22:27 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:22:27 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:22:27 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:22:27 | INFO     | Pipeline | ❓ Question: what are your views on my RAG project README...
+2026-06-18 00:22:27 | INFO     | Retriever | Retrieving for: 'what are your views on my RAG project README...'
+2026-06-18 00:22:30 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-18 00:22:30 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-18 00:22:30 | INFO     | Retriever | Context prepared: 3057 chars from 3 chunks
+2026-06-18 00:22:37 | INFO     | Retriever | Retrieving for: 'what are your views on my RAG project README...'
+2026-06-18 00:22:39 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-18 00:22:39 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-18 00:22:39 | INFO     | Evaluator | Evaluating response for: 'what are your views on my RAG project RE...'
+2026-06-18 00:22:39 | INFO     | Evaluator | Evaluation complete: overall=0.74, grade=B+ 👍
+2026-06-18 00:22:39 | INFO     | SessionManager | Message #1 added to chat history
+2026-06-18 00:22:41 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:22:43 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:22:43 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:22:43 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:22:43 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:22:45 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:23:03 | INFO     | SessionManager | New session started: 2026-06-18 00:23:03
+2026-06-18 00:23:03 | INFO     | Evaluator | RAG Evaluator initialized
+2026-06-18 00:23:05 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:23:07 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:23:07 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:23:07 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:23:07 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:23:09 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:23:18 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:23:20 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:23:20 | INFO     | Pipeline | 📄 Indexing file: README.md
+2026-06-18 00:23:20 | INFO     | Loader | Loading uploaded file: README.md
+2026-06-18 00:23:20 | INFO     | Loader | Loading text file from bytes: README.md
+2026-06-18 00:23:20 | INFO     | Chunker | Split 1 documents into 9 chunks
+2026-06-18 00:23:20 | INFO     | Pipeline | Creating embeddings for 9 chunks...
+2026-06-18 00:23:20 | INFO     | Embeddings | Embedding 9 texts in batches of 10...
+2026-06-18 00:23:41 | INFO     | Embeddings | Embedded 9/9 texts
+2026-06-18 00:23:41 | INFO     | Embeddings | Batch embedding complete: 9 vectors
+2026-06-18 00:23:42 | INFO     | VectorStore | Stored 9/9 chunks
+2026-06-18 00:23:42 | INFO     | VectorStore | ✅ Total stored: 9 chunks
+2026-06-18 00:23:42 | INFO     | Pipeline | ✅ Indexed README.md: 9 chunks stored
+2026-06-18 00:23:42 | INFO     | SessionManager | File tracked: README.md (9 chunks)
+2026-06-18 00:23:42 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:23:42 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:23:42 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:23:44 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:24:09 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:24:11 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:24:12 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:24:12 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:24:12 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:24:12 | INFO     | Pipeline | ❓ Question: how is my README for my RAG project...
+2026-06-18 00:24:12 | INFO     | Retriever | Retrieving for: 'how is my README for my RAG project...'
+2026-06-18 00:24:15 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-18 00:24:15 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-18 00:24:15 | INFO     | Retriever | Context prepared: 3052 chars from 3 chunks
+2026-06-18 00:24:22 | INFO     | Retriever | Retrieving for: 'how is my README for my RAG project...'
+2026-06-18 00:24:24 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-18 00:24:24 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-18 00:24:24 | INFO     | Evaluator | Evaluating response for: 'how is my README for my RAG project...'
+2026-06-18 00:24:24 | INFO     | Evaluator | Evaluation complete: overall=0.753, grade=B+ 👍
+2026-06-18 00:24:24 | INFO     | SessionManager | Message #1 added to chat history
+2026-06-18 00:24:27 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:24:29 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:24:29 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:24:29 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:24:29 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:24:31 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:25:48 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:25:50 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:25:50 | INFO     | Pipeline | 📄 Indexing file: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-18 00:25:50 | INFO     | Loader | Loading uploaded file: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-18 00:25:50 | INFO     | Loader | Loading PDF from bytes: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-18 00:25:50 | INFO     | Loader | Extracted 51 pages from 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf
+2026-06-18 00:25:50 | INFO     | Chunker | Split 51 documents into 78 chunks
+2026-06-18 00:25:50 | INFO     | Pipeline | Creating embeddings for 78 chunks...
+2026-06-18 00:25:50 | INFO     | Embeddings | Embedding 78 texts in batches of 10...
+2026-06-18 00:26:13 | INFO     | Embeddings | Embedded 10/78 texts
+2026-06-18 00:26:34 | INFO     | Embeddings | Embedded 20/78 texts
+2026-06-18 00:26:56 | INFO     | Embeddings | Embedded 30/78 texts
+2026-06-18 00:27:18 | INFO     | Embeddings | Embedded 40/78 texts
+2026-06-18 00:27:40 | INFO     | Embeddings | Embedded 50/78 texts
+2026-06-18 00:28:02 | INFO     | Embeddings | Embedded 60/78 texts
+2026-06-18 00:28:23 | INFO     | Embeddings | Embedded 70/78 texts
+2026-06-18 00:28:41 | INFO     | Embeddings | Embedded 78/78 texts
+2026-06-18 00:28:41 | INFO     | Embeddings | Batch embedding complete: 78 vectors
+2026-06-18 00:28:41 | INFO     | VectorStore | Stored 78/78 chunks
+2026-06-18 00:28:41 | INFO     | VectorStore | ✅ Total stored: 78 chunks
+2026-06-18 00:28:41 | INFO     | Pipeline | ✅ Indexed 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf: 78 chunks stored
+2026-06-18 00:28:41 | INFO     | SessionManager | File tracked: 12+Rules+to+Learn+to+Code+[2nd+Edition]+2022 (1).pdf (78 chunks)
+2026-06-18 00:28:41 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:28:41 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:28:41 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:28:43 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:31:01 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:31:03 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:31:03 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:31:03 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:31:03 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:31:03 | INFO     | Pipeline | ❓ Question: explain these 12 rules for coding in short...
+2026-06-18 00:31:03 | INFO     | Retriever | Retrieving for: 'explain these 12 rules for coding in short...'
+2026-06-18 00:31:07 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-18 00:31:07 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-18 00:31:07 | INFO     | Retriever | Context prepared: 1239 chars from 5 chunks
+2026-06-18 00:31:30 | INFO     | Retriever | Retrieving for: 'explain these 12 rules for coding in short...'
+2026-06-18 00:31:32 | INFO     | VectorStore | Found 5 relevant chunks
+2026-06-18 00:31:32 | INFO     | Retriever | Retrieved 5 relevant chunks (similarity >= 0.3)
+2026-06-18 00:31:32 | INFO     | Evaluator | Evaluating response for: 'explain these 12 rules for coding in sho...'
+2026-06-18 00:31:32 | INFO     | Evaluator | Evaluation complete: overall=0.537, grade=C  ⚠️
+2026-06-18 00:31:32 | INFO     | SessionManager | Message #2 added to chat history
+2026-06-18 00:31:34 | INFO     | LLM | ✅ llama3.2:3b is available
+2026-06-18 00:31:37 | INFO     | Embeddings | ✅ nomic-embed-text is available
+2026-06-18 00:31:37 | INFO     | SessionManager | Preference updated: streaming=True
+2026-06-18 00:31:37 | INFO     | SessionManager | Preference updated: show_sources=True
+2026-06-18 00:31:37 | INFO     | SessionManager | Preference updated: show_eval=True
+2026-06-18 00:31:39 | INFO     | LLM | ✅ llama3.2:3b is available
