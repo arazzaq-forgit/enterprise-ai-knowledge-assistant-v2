@@ -1,11 +1,25 @@
 import { useState, useRef, useEffect } from "react"
 import { Send, PanelLeftOpen, FileText, Sparkles } from "lucide-react"
 import Message from "./Message"
-import { streamChat } from "@/services/api"
+import { streamChat, chatWithEvaluation } from "@/services/api"
 
 interface ChatMessage {
   role: "user" | "assistant"
   content: string
+  confidence?: {
+    score: number
+    label: string
+    percentage: string
+    color: string
+    explanation?: string
+  }
+  hallucination?: {
+    risk_level: string
+    risk_score: number
+    color: string
+    explanation?: string
+    is_grounded: boolean
+  }
 }
 
 interface ChatWindowProps {
@@ -40,38 +54,60 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
   }
 
   const sendMessage = async () => {
-    const question = input.trim()
-    if (!question || isStreaming) return
-    setInput("")
-    const userMsg: ChatMessage = { role: "user", content: question }
-    const assistantMsg: ChatMessage = { role: "assistant", content: "" }
-    setMessages((prev) => [...prev, userMsg, assistantMsg])
-    setIsStreaming(true)
+  const question = input.trim()
+  if (!question || isStreaming) return
+  setInput("")
+  const userMsg: ChatMessage = { role: "user", content: question }
+  const assistantMsg: ChatMessage = { role: "assistant", content: "" }
+  setMessages((prev) => [...prev, userMsg, assistantMsg])
+  setIsStreaming(true)
 
-    streamChat(
-      question,
-      getHistory([...messages, userMsg]),
-      (token) => {
+  // First stream the response for UX
+  streamChat(
+    question,
+    getHistory([...messages, userMsg]),
+    (token) => {
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          role: "assistant",
+          content: updated[updated.length - 1].content + token,
+        }
+        return updated
+      })
+    },
+    async () => {
+      setIsStreaming(false)
+      // After streaming, get evaluation scores
+      try {
+        const evaluation = await chatWithEvaluation(
+          question,
+          getHistory([...messages, userMsg])
+        )
         setMessages((prev) => {
           const updated = [...prev]
           updated[updated.length - 1] = {
-            role: "assistant",
-            content: updated[updated.length - 1].content + token,
+            ...updated[updated.length - 1],
+            confidence:   evaluation.confidence,
+            hallucination: evaluation.hallucination_check,
           }
           return updated
         })
-      },
-      () => setIsStreaming(false),
-      (err) => {
-        setMessages((prev) => {
-          const updated = [...prev]
-          updated[updated.length - 1] = { role: "assistant", content: "Error: " + err }
-          return updated
-        })
-        setIsStreaming(false)
+      } catch (err) {
+        console.error("Evaluation failed:", err)
       }
-    )
-  }
+    },
+    (err) => {
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = { role: "assistant", content: "Error: " + err }
+        return updated
+      })
+      setIsStreaming(false)
+    }
+  )
+}
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -111,9 +147,15 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
 
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
         {messages.map((msg, i) => (
-          <Message key={i} role={msg.role} content={msg.content}
-            isStreaming={isStreaming && i === messages.length - 1 && msg.role === "assistant"} />
-        ))}
+  <Message
+    key={i}
+    role={msg.role}
+    content={msg.content}
+    isStreaming={isStreaming && i === messages.length - 1 && msg.role === "assistant"}
+    confidence={msg.confidence}
+    hallucination={msg.hallucination}
+  />
+))}
         <div ref={bottomRef} />
       </div>
 
