@@ -1,20 +1,9 @@
 import axios from "axios"
 
-const BASE_URL = import.meta.env.VITE_API_URL || "https://enterprise-ai-knowledge-assistant-v2.onrender.com"
+const BASE_URL = "https://enterprise-ai-knowledge-assistant-v2.onrender.com"
 
 const API = axios.create({ baseURL: BASE_URL })
 
-export const chatWithEvaluation = async (
-  question: string,
-  chatHistory: { question: string; answer: string }[]
-) => {
-  const res = await API.post("/api/chat/evaluate", {
-    question,
-    chat_history: chatHistory,
-    stream: false,
-  })
-  return res.data
-}
 export const uploadFile = async (file: File) => {
   const form = new FormData()
   form.append("file", file)
@@ -34,6 +23,18 @@ export const getDocuments = async () => {
 
 export const clearDocuments = async () => {
   const res = await API.delete("/api/documents")
+  return res.data
+}
+
+export const chatWithEvaluation = async (
+  question: string,
+  chatHistory: { question: string; answer: string }[]
+) => {
+  const res = await API.post("/api/chat/evaluate", {
+    question,
+    chat_history: chatHistory,
+    stream: false,
+  })
   return res.data
 }
 
