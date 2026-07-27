@@ -17,10 +17,24 @@ def make_error_event(error):
     data = json.dumps({"error": str(error)})
     return f"data: {data}\n\n"
 
-@router.post("/chat")
-async def chat(request: Request, body: ChatRequest):
+@router.post("/chat/evaluate")
+async def chat_with_evaluation(request: Request, body: ChatRequest):
+    """
+    Ask a question and get answer with confidence score
+    and hallucination detection.
+    """
     pipeline = request.app.state.pipeline
-    history = [{"question": m.question, "answer": m.answer} for m in (body.chat_history or [])]
+    history  = [
+        {"question": m.question, "answer": m.answer}
+        for m in (body.chat_history or [])
+    ]
+
+    result = pipeline.ask_with_evaluation(
+        question     = body.question,
+        chat_history = history
+    )
+
+    return result
 
     async def generate():
         try:

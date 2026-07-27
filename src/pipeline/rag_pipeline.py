@@ -19,6 +19,8 @@ from src.llm.llm_client import LLMClient
 from src.retrieval.retriever import Retriever
 from src.prompts.prompt_template import PromptTemplates
 from src.utils.logger import get_pipeline_logger
+from src.evaluation.confidence_scorer import ConfidenceScorer
+from src.evaluation.hallucination_detector import HallucinationDetector
 
 logger = get_pipeline_logger()
 
@@ -80,6 +82,9 @@ class RAGPipeline:
 
         self.prompts = PromptTemplates()
         self.loaded_docs: List[str] = []
+
+        self.confidence_scorer      = ConfidenceScorer()
+        self.hallucination_detector = HallucinationDetector()
 
         # Build BM25 index from any existing documents
         self.retriever.build_bm25_index()
@@ -291,6 +296,78 @@ class RAGPipeline:
         except Exception as e:
             logger.error(f"Pipeline error: {str(e)}")
             yield f"Error: {str(e)}"
+
+        def ask_with_evaluation(self,
+                            question: str,
+                            chat_history=None) -> Dict[str, Any]:
+         """
+        Answer a question and return full evaluation metadata.
+        Used by the API to return confidence + hallucination scores.
+
+        Returns:
+        Dict with answer, sources, confidence, hallucination_check
+        """
+        if  self.vector_store.count() == 0:
+            return {
+                "answer":   "No documents loaded yet. Please upload documents first.",
+                "sources":  [],
+                "confidence":          {"score": 0, "label": "No Context", "percentage": "0%"},
+                "hallucination_check": {"risk_level": "HIGH", "is_grounded": False},
+            }
+
+        # Retrieve chunks
+        chunks  = self.retriever.retrieve(question)
+        context = self.retriever.get_context_text(question)
+
+        # Build prompt
+        history = chat_history or []
+        if not context:
+            prompt = PromptTemplates.no_context_prompt(question)
+        elif history:
+            prompt = PromptTemplates.followup_prompt(question, context, history)
+        elif len(self.loaded_docs) > 1:
+            prompt = PromptTemplates.multi_doc_prompt(question, context, self.loaded_docs)
+        else:
+            prompt = PromptTemplates.rag_prompt(question, context)
+
+        # Generate full answer (non-streaming for evaluation)
+        answer = self.llm.generate(
+            prompt        = prompt,
+            system_prompt = PromptTemplates.SYSTEM_PROMPT
+        )
+
+        # Score confidence
+        confidence = self.confidence_scorer.score(
+            question = question,
+            answer   = answer,
+            retrieved_chunks = chunks
+        )
+
+        # Detect hallucinations
+        hallucination_check = self.hallucination_detector.detect(
+            answer           = answer,
+            retrieved_chunks = chunks,
+            question         = question
+        )
+
+        # Format sources
+        sources = [
+            {
+                "content":  c.get("content", "")[:300],
+                "source":   c.get("metadata", {}).get("source", "Unknown"),
+                "page":     c.get("metadata", {}).get("page_number"),
+                "similarity": c.get("similarity"),
+                "relevance_label": c.get("relevance_label"),
+            }
+            for c in chunks
+        ]
+
+        return {
+            "answer":              answer,
+            "sources":             sources,
+            "confidence":          confidence,
+            "hallucination_check": hallucination_check,
+        }
 
     def summarize(self,
                   filename: str) -> Generator[str, None, None]:
