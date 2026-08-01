@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Send, PanelLeftOpen, FileText, Sparkles } from "lucide-react"
 import Message from "./Message"
-import { streamChat, chatWithEvaluation } from "@/services/api"
+import { streamChat } from "@/services/api"
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -62,7 +62,9 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
   setMessages((prev) => [...prev, userMsg, assistantMsg])
   setIsStreaming(true)
 
-  // First stream the response for UX
+  // Single request: tokens stream in for UX, and confidence/hallucination
+  // scores arrive as a final "eval" event on the same stream — no second
+  // round-trip, no second LLM call, no delay before badges appear.
   streamChat(
     question,
     getHistory([...messages, userMsg]),
@@ -77,26 +79,8 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
         return updated
       })
     },
-    async () => {
+    () => {
       setIsStreaming(false)
-      // After streaming, get evaluation scores
-      try {
-        const evaluation = await chatWithEvaluation(
-          question,
-          getHistory([...messages, userMsg])
-        )
-        setMessages((prev) => {
-          const updated = [...prev]
-          updated[updated.length - 1] = {
-            ...updated[updated.length - 1],
-            confidence:   evaluation.confidence,
-            hallucination: evaluation.hallucination_check,
-          }
-          return updated
-        })
-      } catch (err) {
-        console.error("Evaluation failed:", err)
-      }
     },
     (err) => {
       setMessages((prev) => {
@@ -105,6 +89,17 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
         return updated
       })
       setIsStreaming(false)
+    },
+    (evalData) => {
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          confidence: evalData.confidence,
+          hallucination: evalData.hallucination_check,
+        }
+        return updated
+      })
     }
   )
 }

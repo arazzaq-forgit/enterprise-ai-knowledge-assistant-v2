@@ -66,7 +66,6 @@ class RAGPipeline:
 
         self.llm = LLMClient(
             model_name  = os.getenv("LLM_MODEL", llm_model),
-            base_url    = base_url,
             temperature = 0.1,
             max_tokens  = 2048
         )

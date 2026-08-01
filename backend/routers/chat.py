@@ -13,13 +13,29 @@ def make_done_event():
     data = json.dumps({"done": True})
     return f"data: {data}\n\n"
 
+def make_eval_event(sources, confidence, hallucination_check):
+    data = json.dumps({
+        "eval": True,
+        "sources": sources,
+        "confidence": confidence,
+        "hallucination_check": hallucination_check,
+    })
+    return f"data: {data}\n\n"
+
 def make_error_event(error):
     data = json.dumps({"error": str(error)})
     return f"data: {data}\n\n"
 
 @router.post("/chat")
 async def chat(request: Request, body: ChatRequest):
-    """Stream AI response via Server-Sent Events."""
+    """
+    Stream AI response via Server-Sent Events.
+
+    Single LLM call: tokens stream as they're generated, then one final
+    "eval" event carries confidence + hallucination scores (computed from
+    the already-retrieved chunks and the now-complete answer — no second
+    LLM round-trip, no separate /chat/evaluate call needed from the client).
+    """
     pipeline = request.app.state.pipeline
     history = [
         {"question": m.question, "answer": m.answer}
@@ -28,12 +44,18 @@ async def chat(request: Request, body: ChatRequest):
 
     async def generate():
         try:
-            for chunk in pipeline.ask(
+            for event in pipeline.ask_stream_with_evaluation(
                 question=body.question,
                 chat_history=history,
-                stream=True
             ):
-                yield make_token_event(chunk)
+                if event["type"] == "token":
+                    yield make_token_event(event["token"])
+                elif event["type"] == "eval":
+                    yield make_eval_event(
+                        event["sources"],
+                        event["confidence"],
+                        event["hallucination_check"],
+                    )
             yield make_done_event()
         except Exception as e:
             yield make_error_event(e)
@@ -50,7 +72,13 @@ async def chat(request: Request, body: ChatRequest):
 
 @router.post("/chat/evaluate")
 async def chat_with_evaluation(request: Request, body: ChatRequest):
-    """Ask a question and get answer with confidence + hallucination scores."""
+    """
+    Non-streaming: ask a question and get the answer with confidence +
+    hallucination scores in one blocking response. Kept for callers that
+    want a single non-streaming call (e.g. Phase 3 batch evaluation script).
+    Not used by the main chat UI anymore — that uses the single-call
+    streaming /chat endpoint above instead.
+    """
     pipeline = request.app.state.pipeline
     history = [
         {"question": m.question, "answer": m.answer}
