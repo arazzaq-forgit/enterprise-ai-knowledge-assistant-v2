@@ -1,0 +1,315 @@
+diff --git a/backend/routers/chat.py b/backend/routers/chat.py
+index 49fd35f..d119d87 100644
+--- a/backend/routers/chat.py
++++ b/backend/routers/chat.py
+@@ -13,13 +13,29 @@ def make_done_event():
+     data = json.dumps({"done": True})
+     return f"data: {data}\n\n"
+ 
++def make_eval_event(sources, confidence, hallucination_check):
++    data = json.dumps({
++        "eval": True,
++        "sources": sources,
++        "confidence": confidence,
++        "hallucination_check": hallucination_check,
++    })
++    return f"data: {data}\n\n"
++
+ def make_error_event(error):
+     data = json.dumps({"error": str(error)})
+     return f"data: {data}\n\n"
+ 
+ @router.post("/chat")
+ async def chat(request: Request, body: ChatRequest):
+-    """Stream AI response via Server-Sent Events."""
++    """
++    Stream AI response via Server-Sent Events.
++
++    Single LLM call: tokens stream as they're generated, then one final
++    "eval" event carries confidence + hallucination scores (computed from
++    the already-retrieved chunks and the now-complete answer — no second
++    LLM round-trip, no separate /chat/evaluate call needed from the client).
++    """
+     pipeline = request.app.state.pipeline
+     history = [
+         {"question": m.question, "answer": m.answer}
+@@ -28,12 +44,18 @@ async def chat(request: Request, body: ChatRequest):
+ 
+     async def generate():
+         try:
+-            for chunk in pipeline.ask(
++            for event in pipeline.ask_stream_with_evaluation(
+                 question=body.question,
+                 chat_history=history,
+-                stream=True
+             ):
+-                yield make_token_event(chunk)
++                if event["type"] == "token":
++                    yield make_token_event(event["token"])
++                elif event["type"] == "eval":
++                    yield make_eval_event(
++                        event["sources"],
++                        event["confidence"],
++                        event["hallucination_check"],
++                    )
+             yield make_done_event()
+         except Exception as e:
+             yield make_error_event(e)
+diff --git a/frontend/src/components/chat/ChatWindow.tsx b/frontend/src/components/chat/ChatWindow.tsx
+index 9be392f..e662eda 100644
+--- a/frontend/src/components/chat/ChatWindow.tsx
++++ b/frontend/src/components/chat/ChatWindow.tsx
+@@ -1,7 +1,7 @@
+ import { useState, useRef, useEffect } from "react"
+ import { Send, PanelLeftOpen, FileText, Sparkles } from "lucide-react"
+ import Message from "./Message"
+-import { streamChat, chatWithEvaluation } from "@/services/api"
++import { streamChat } from "@/services/api"
+ 
+ interface ChatMessage {
+   role: "user" | "assistant"
+@@ -62,7 +62,9 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
+   setMessages((prev) => [...prev, userMsg, assistantMsg])
+   setIsStreaming(true)
+ 
+-  // First stream the response for UX
++  // Single request: tokens stream in for UX, and confidence/hallucination
++  // scores arrive as a final "eval" event on the same stream — no second
++  // round-trip, no second LLM call, no delay before badges appear.
+   streamChat(
+     question,
+     getHistory([...messages, userMsg]),
+@@ -77,26 +79,8 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
+         return updated
+       })
+     },
+-    async () => {
++    () => {
+       setIsStreaming(false)
+-      // After streaming, get evaluation scores
+-      try {
+-        const evaluation = await chatWithEvaluation(
+-          question,
+-          getHistory([...messages, userMsg])
+-        )
+-        setMessages((prev) => {
+-          const updated = [...prev]
+-          updated[updated.length - 1] = {
+-            ...updated[updated.length - 1],
+-            confidence:   evaluation.confidence,
+-            hallucination: evaluation.hallucination_check,
+-          }
+-          return updated
+-        })
+-      } catch (err) {
+-        console.error("Evaluation failed:", err)
+-      }
+     },
+     (err) => {
+       setMessages((prev) => {
+@@ -105,6 +89,17 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
+         return updated
+       })
+       setIsStreaming(false)
++    },
++    (evalData) => {
++      setMessages((prev) => {
++        const updated = [...prev]
++        updated[updated.length - 1] = {
++          ...updated[updated.length - 1],
++          confidence: evalData.confidence,
++          hallucination: evalData.hallucination_check,
++        }
++        return updated
++      })
+     }
+   )
+ }
+diff --git a/frontend/src/services/api.ts b/frontend/src/services/api.ts
+index 920ba6d..274e609 100644
+--- a/frontend/src/services/api.ts
++++ b/frontend/src/services/api.ts
+@@ -38,12 +38,31 @@ export const chatWithEvaluation = async (
+   return res.data
+ }
+ 
++export interface EvalPayload {
++  sources: unknown[]
++  confidence: {
++    score: number
++    label: string
++    percentage: string
++    color: string
++    explanation?: string
++  }
++  hallucination_check: {
++    risk_level: string
++    risk_score: number
++    color: string
++    explanation?: string
++    is_grounded: boolean
++  }
++}
++
+ export const streamChat = (
+   question: string,
+   chatHistory: { question: string; answer: string }[],
+   onToken: (token: string) => void,
+   onDone: () => void,
+-  onError: (err: string) => void
++  onError: (err: string) => void,
++  onEval?: (evalData: EvalPayload) => void
+ ) => {
+   fetch(`${BASE_URL}/api/chat`, {
+     method: "POST",
+@@ -53,15 +72,25 @@ export const streamChat = (
+     const reader = res.body?.getReader()
+     const decoder = new TextDecoder()
+     if (!reader) return onError("No response stream")
++    let buffer = ""
+     while (true) {
+       const { done, value } = await reader.read()
+       if (done) break
+-      const text = decoder.decode(value)
+-      const lines = text.split("\n").filter((l) => l.startsWith("data: "))
++      buffer += decoder.decode(value, { stream: true })
++      const lines = buffer.split("\n\n")
++      buffer = lines.pop() ?? ""
+       for (const line of lines) {
++        if (!line.startsWith("data: ")) continue
+         try {
+           const json = JSON.parse(line.replace("data: ", ""))
+           if (json.token) onToken(json.token)
++          if (json.eval && onEval) {
++            onEval({
++              sources: json.sources,
++              confidence: json.confidence,
++              hallucination_check: json.hallucination_check,
++            })
++          }
+           if (json.done) onDone()
+           if (json.error) onError(json.error)
+         } catch {}
+diff --git a/src/pipeline/rag_pipeline.py b/src/pipeline/rag_pipeline.py
+index 3859a72..a0f5e7f 100644
+--- a/src/pipeline/rag_pipeline.py
++++ b/src/pipeline/rag_pipeline.py
+@@ -297,17 +297,111 @@ class RAGPipeline:
+             logger.error(f"Pipeline error: {str(e)}")
+             yield f"Error: {str(e)}"
+ 
+-        def ask_with_evaluation(self,
+-                            question: str,
+-                            chat_history=None) -> Dict[str, Any]:
+-         """
+-        Answer a question and return full evaluation metadata.
+-        Used by the API to return confidence + hallucination scores.
++    def ask_stream_with_evaluation(self,
++                                    question: str,
++                                    chat_history: Optional[List[Dict]] = None
++                                    ) -> Generator[Dict[str, Any], None, None]:
++        """
++        Stream the answer token-by-token (single LLM call), then yield ONE
++        final evaluation event with confidence + hallucination scores.
++
++        This replaces the old flow of (1) stream the answer, then (2) call
++        the LLM a second time via ask_with_evaluation() just to re-derive
++        scores. Confidence/hallucination scoring is pure heuristics over the
++        retrieved chunks + final answer text (no LLM call), so it can be
++        computed immediately after the stream finishes, in the SAME request.
++
++        Yields:
++            {"type": "token", "token": str}                      -- while streaming
++            {"type": "eval", "sources", "confidence",
++             "hallucination_check"}                               -- once, at the end
++        """
++        logger.info(f"Question (stream+eval): {question[:60]}...")
++        history = chat_history or []
++
++        if self.vector_store.count() == 0:
++            yield {"type": "token", "token": (
++                "No documents loaded yet!\n\n"
++                "Please upload documents using the sidebar first."
++            )}
++            yield {
++                "type": "eval",
++                "sources": [],
++                "confidence": {"score": 0, "label": "No Context", "percentage": "0%"},
++                "hallucination_check": {"risk_level": "HIGH", "is_grounded": False},
++            }
++            return
++
++        try:
++            # Retrieve once — reused for both prompt context and scoring
++            chunks  = self.retriever.retrieve(question)
++            context = self.retriever.get_context_text(question, max_chars=4000)
++
++            if not context:
++                prompt = PromptTemplates.no_context_prompt(question)
++            elif history:
++                prompt = PromptTemplates.followup_prompt(question, context, history)
++            elif len(self.loaded_docs) > 1:
++                prompt = PromptTemplates.multi_doc_prompt(question, context, self.loaded_docs)
++            else:
++                prompt = PromptTemplates.rag_prompt(question, context)
++
++            full_answer_parts: List[str] = []
++            for token in self.llm.generate_stream(
++                prompt=prompt, system_prompt=PromptTemplates.SYSTEM_PROMPT
++            ):
++                full_answer_parts.append(token)
++                yield {"type": "token", "token": token}
++
++            full_answer = "".join(full_answer_parts)
++
++            confidence = self.confidence_scorer.score(
++                question=question, answer=full_answer, retrieved_chunks=chunks
++            )
++            hallucination_check = self.hallucination_detector.detect(
++                answer=full_answer, retrieved_chunks=chunks, question=question
++            )
++            sources = [
++                {
++                    "content": c.get("content", "")[:300],
++                    "source": c.get("metadata", {}).get("source", "Unknown"),
++                    "page": c.get("metadata", {}).get("page_number"),
++                    "similarity": c.get("similarity"),
++                    "relevance_label": c.get("relevance_label"),
++                }
++                for c in chunks
++            ]
++
++            yield {
++                "type": "eval",
++                "sources": sources,
++                "confidence": confidence,
++                "hallucination_check": hallucination_check,
++            }
++
++        except Exception as e:
++            logger.error(f"Pipeline error (stream+eval): {str(e)}")
++            yield {"type": "token", "token": f"Error: {str(e)}"}
++            yield {
++                "type": "eval",
++                "sources": [],
++                "confidence": {"score": 0, "label": "Error", "percentage": "0%"},
++                "hallucination_check": {"risk_level": "HIGH", "is_grounded": False},
++            }
++
++    def ask_with_evaluation(self,
++                             question: str,
++                             chat_history: Optional[List[Dict]] = None
++                             ) -> Dict[str, Any]:
++        """
++        Non-streaming: answer a question and return full evaluation metadata
++        in one shot. Kept for callers that want a single blocking response
++        (e.g. batch evaluation in Phase 3, or non-streaming API clients).
+ 
+         Returns:
+         Dict with answer, sources, confidence, hallucination_check
+         """
+-        if  self.vector_store.count() == 0:
++        if self.vector_store.count() == 0:
+             return {
+                 "answer":   "No documents loaded yet. Please upload documents first.",
+                 "sources":  [],

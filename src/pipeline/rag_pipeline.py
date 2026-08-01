@@ -44,8 +44,7 @@ class RAGPipeline:
                  top_k: int = 5,
                  persist_dir: str = "data/vectorstore",
                  llm_model: str = "llama3.2:3b",
-                 embed_model: str = "nomic-embed-text",
-                 base_url: str = "http://localhost:11434"):
+                 embed_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
 
         logger.info("Initializing RAG Pipeline...")
 
@@ -57,8 +56,7 @@ class RAGPipeline:
         )
 
         self.embedding_model = EmbeddingModel(
-            model_name = embed_model,
-            base_url   = base_url
+            model_name = embed_model
         )
 
         self.vector_store = VectorStore(
@@ -297,17 +295,111 @@ class RAGPipeline:
             logger.error(f"Pipeline error: {str(e)}")
             yield f"Error: {str(e)}"
 
-        def ask_with_evaluation(self,
-                            question: str,
-                            chat_history=None) -> Dict[str, Any]:
-         """
-        Answer a question and return full evaluation metadata.
-        Used by the API to return confidence + hallucination scores.
+    def ask_stream_with_evaluation(self,
+                                    question: str,
+                                    chat_history: Optional[List[Dict]] = None
+                                    ) -> Generator[Dict[str, Any], None, None]:
+        """
+        Stream the answer token-by-token (single LLM call), then yield ONE
+        final evaluation event with confidence + hallucination scores.
+
+        This replaces the old flow of (1) stream the answer, then (2) call
+        the LLM a second time via ask_with_evaluation() just to re-derive
+        scores. Confidence/hallucination scoring is pure heuristics over the
+        retrieved chunks + final answer text (no LLM call), so it can be
+        computed immediately after the stream finishes, in the SAME request.
+
+        Yields:
+            {"type": "token", "token": str}                      -- while streaming
+            {"type": "eval", "sources", "confidence",
+             "hallucination_check"}                               -- once, at the end
+        """
+        logger.info(f"Question (stream+eval): {question[:60]}...")
+        history = chat_history or []
+
+        if self.vector_store.count() == 0:
+            yield {"type": "token", "token": (
+                "No documents loaded yet!\n\n"
+                "Please upload documents using the sidebar first."
+            )}
+            yield {
+                "type": "eval",
+                "sources": [],
+                "confidence": {"score": 0, "label": "No Context", "percentage": "0%"},
+                "hallucination_check": {"risk_level": "HIGH", "is_grounded": False},
+            }
+            return
+
+        try:
+            # Retrieve once — reused for both prompt context and scoring
+            chunks  = self.retriever.retrieve(question)
+            context = self.retriever.get_context_text(question, max_chars=4000)
+
+            if not context:
+                prompt = PromptTemplates.no_context_prompt(question)
+            elif history:
+                prompt = PromptTemplates.followup_prompt(question, context, history)
+            elif len(self.loaded_docs) > 1:
+                prompt = PromptTemplates.multi_doc_prompt(question, context, self.loaded_docs)
+            else:
+                prompt = PromptTemplates.rag_prompt(question, context)
+
+            full_answer_parts: List[str] = []
+            for token in self.llm.generate_stream(
+                prompt=prompt, system_prompt=PromptTemplates.SYSTEM_PROMPT
+            ):
+                full_answer_parts.append(token)
+                yield {"type": "token", "token": token}
+
+            full_answer = "".join(full_answer_parts)
+
+            confidence = self.confidence_scorer.score(
+                question=question, answer=full_answer, retrieved_chunks=chunks
+            )
+            hallucination_check = self.hallucination_detector.detect(
+                answer=full_answer, retrieved_chunks=chunks, question=question
+            )
+            sources = [
+                {
+                    "content": c.get("content", "")[:300],
+                    "source": c.get("metadata", {}).get("source", "Unknown"),
+                    "page": c.get("metadata", {}).get("page_number"),
+                    "similarity": c.get("similarity"),
+                    "relevance_label": c.get("relevance_label"),
+                }
+                for c in chunks
+            ]
+
+            yield {
+                "type": "eval",
+                "sources": sources,
+                "confidence": confidence,
+                "hallucination_check": hallucination_check,
+            }
+
+        except Exception as e:
+            logger.error(f"Pipeline error (stream+eval): {str(e)}")
+            yield {"type": "token", "token": f"Error: {str(e)}"}
+            yield {
+                "type": "eval",
+                "sources": [],
+                "confidence": {"score": 0, "label": "Error", "percentage": "0%"},
+                "hallucination_check": {"risk_level": "HIGH", "is_grounded": False},
+            }
+
+    def ask_with_evaluation(self,
+                             question: str,
+                             chat_history: Optional[List[Dict]] = None
+                             ) -> Dict[str, Any]:
+        """
+        Non-streaming: answer a question and return full evaluation metadata
+        in one shot. Kept for callers that want a single blocking response
+        (e.g. batch evaluation in Phase 3, or non-streaming API clients).
 
         Returns:
         Dict with answer, sources, confidence, hallucination_check
         """
-        if  self.vector_store.count() == 0:
+        if self.vector_store.count() == 0:
             return {
                 "answer":   "No documents loaded yet. Please upload documents first.",
                 "sources":  [],
