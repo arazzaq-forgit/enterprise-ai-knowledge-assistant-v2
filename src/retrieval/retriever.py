@@ -144,12 +144,22 @@ class Retriever:
         return final
 
     def get_context_text(self, query: str,
-                         max_chars: int = 4000) -> str:
+                         max_chars: int = 4000,
+                         chunks: Optional[List[Dict]] = None) -> str:
         """
         Get formatted context string for LLM prompt.
         Includes source attribution for each chunk.
+
+        Args:
+            query:     Used to retrieve chunks if `chunks` isn't provided.
+            max_chars: Character budget for the combined context.
+            chunks:    Optional pre-fetched chunk list — pass this when
+                       you've already retrieved chunks yourself (e.g. the
+                       merged results from query decomposition across
+                       several sub-questions) so this doesn't re-retrieve.
         """
-        chunks = self.retrieve(query)
+        if chunks is None:
+            chunks = self.retrieve(query)
         if not chunks:
             return ""
 

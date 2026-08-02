@@ -17,6 +17,7 @@ from src.embeddings.embedding_model import EmbeddingModel
 from src.vectorstore.vector_store import VectorStore
 from src.llm.llm_client import LLMClient
 from src.retrieval.retriever import Retriever
+from src.retrieval.query_decomposer import QueryDecomposer
 from src.prompts.prompt_template import PromptTemplates
 from src.utils.logger import get_pipeline_logger
 from src.evaluation.confidence_scorer import ConfidenceScorer
@@ -83,6 +84,15 @@ class RAGPipeline:
             min_similarity    = 0.0,
             use_cross_encoder = use_cross_encoder
         )
+
+        # Query decomposition: splits genuinely multi-part questions into
+        # sub-questions retrieved separately. Costs one extra LLM call,
+        # but ONLY for questions that look multi-part (cheap heuristic
+        # gate skips simple questions entirely). Default ON; opt out via
+        # env var same as cross-encoder if you want to save latency/cost.
+        use_query_decomposition = os.getenv("USE_QUERY_DECOMPOSITION", "true").lower() != "false"
+        self.use_query_decomposition = use_query_decomposition
+        self.query_decomposer = QueryDecomposer(self.llm) if use_query_decomposition else None
 
         self.prompts = PromptTemplates()
         self.loaded_docs: List[str] = []
@@ -301,6 +311,53 @@ class RAGPipeline:
             logger.error(f"Pipeline error: {str(e)}")
             yield f"Error: {str(e)}"
 
+    def _retrieve_with_decomposition(self,
+                                      question: str,
+                                      max_chars: int = 4000
+                                      ) -> tuple:
+        """
+        Retrieve chunks for a question, decomposing genuinely multi-part
+        questions into sub-questions retrieved separately first (see
+        QueryDecomposer for what qualifies as "multi-part").
+
+        Single shared helper for ask_stream_with_evaluation() and
+        ask_with_evaluation() so decomposition behavior can't drift
+        out of sync between the streaming and non-streaming paths.
+
+        Returns:
+            (chunks, context_text) — same shape as calling
+            retriever.retrieve() + retriever.get_context_text() directly,
+            so callers don't need to know whether decomposition happened.
+        """
+        if not self.use_query_decomposition:
+            chunks  = self.retriever.retrieve(question)
+            context = self.retriever.get_context_text(question, max_chars=max_chars, chunks=chunks)
+            return chunks, context
+
+        sub_questions = self.query_decomposer.decompose(question)
+
+        if len(sub_questions) == 1:
+            chunks  = self.retriever.retrieve(question)
+            context = self.retriever.get_context_text(question, max_chars=max_chars, chunks=chunks)
+            return chunks, context
+
+        # Multi-part: retrieve each sub-question separately, merge + dedupe
+        # by chunk id (so a chunk relevant to multiple sub-questions isn't
+        # duplicated in the context), preserving first-seen order.
+        seen_ids = set()
+        merged_chunks: List[Dict[str, Any]] = []
+        for sub_q in sub_questions:
+            for chunk in self.retriever.retrieve(sub_q):
+                chunk_id = chunk.get("id")
+                if chunk_id not in seen_ids:
+                    seen_ids.add(chunk_id)
+                    merged_chunks.append(chunk)
+
+        context = self.retriever.get_context_text(
+            question, max_chars=max_chars, chunks=merged_chunks
+        )
+        return merged_chunks, context
+
     def ask_stream_with_evaluation(self,
                                     question: str,
                                     chat_history: Optional[List[Dict]] = None
@@ -337,9 +394,10 @@ class RAGPipeline:
             return
 
         try:
-            # Retrieve once — reused for both prompt context and scoring
-            chunks  = self.retriever.retrieve(question)
-            context = self.retriever.get_context_text(question, max_chars=4000)
+            # Retrieve once — reused for both prompt context and scoring.
+            # Transparently handles query decomposition for multi-part
+            # questions (see _retrieve_with_decomposition).
+            chunks, context = self._retrieve_with_decomposition(question, max_chars=4000)
 
             if not context:
                 prompt = PromptTemplates.no_context_prompt(question)
@@ -413,9 +471,8 @@ class RAGPipeline:
                 "hallucination_check": {"risk_level": "HIGH", "is_grounded": False},
             }
 
-        # Retrieve chunks
-        chunks  = self.retriever.retrieve(question)
-        context = self.retriever.get_context_text(question)
+        # Retrieve chunks (transparently decomposes multi-part questions)
+        chunks, context = self._retrieve_with_decomposition(question)
 
         # Build prompt
         history = chat_history or []
