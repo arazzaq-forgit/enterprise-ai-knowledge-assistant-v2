@@ -70,11 +70,18 @@ class RAGPipeline:
             max_tokens  = 2048
         )
 
+        # Cross-encoder re-ranking runs a local torch model per query — safe
+        # on a full local dev machine, but risky on Render's free tier
+        # (512MB RAM). Default ON locally, but respect USE_CROSS_ENCODER=false
+        # as an explicit opt-out for constrained environments.
+        use_cross_encoder = os.getenv("USE_CROSS_ENCODER", "true").lower() != "false"
+
         self.retriever = Retriever(
-            embedding_model = self.embedding_model,
-            vector_store    = self.vector_store,
-            top_k           = top_k,
-            min_similarity  = 0.0
+            embedding_model   = self.embedding_model,
+            vector_store      = self.vector_store,
+            top_k             = top_k,
+            min_similarity    = 0.0,
+            use_cross_encoder = use_cross_encoder
         )
 
         self.prompts = PromptTemplates()
