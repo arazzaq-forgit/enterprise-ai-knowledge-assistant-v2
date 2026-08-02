@@ -30,6 +30,11 @@ export const clearDocuments = async () => {
   return res.data
 }
 
+export const deleteDocument = async (filename: string) => {
+  const res = await API.delete(`/api/documents/${encodeURIComponent(filename)}`)
+  return res.data
+}
+
 // NOTE: the old chatWithEvaluation() (POST /api/chat/evaluate) was removed
 // from here. Confidence + hallucination scores now arrive as a final
 // "eval" event on the streamChat() SSE stream below — no second request.

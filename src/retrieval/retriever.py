@@ -20,6 +20,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from rank_bm25 import BM25Okapi
 from src.embeddings.embedding_model import EmbeddingModel
 from src.vectorstore.vector_store import VectorStore
+from src.retrieval.reranker import CrossEncoderReranker
 from src.utils.logger import setup_logger
 
 logger = setup_logger("HybridRetriever")
@@ -28,7 +29,8 @@ logger = setup_logger("HybridRetriever")
 class Retriever:
     """
     Hybrid retriever combining BM25 keyword search with
-    dense vector semantic search, plus MMR diversity filtering.
+    dense vector semantic search, plus cross-encoder re-ranking
+    and MMR diversity filtering.
 
     Retrieval pipeline:
     Query
@@ -38,6 +40,8 @@ class Retriever:
       +-- Vector Search (semantic similarity) --> scores_vector
       |
       +-- Score Fusion (RRF algorithm)        --> combined_scores
+      |
+      +-- Cross-Encoder Re-ranking            --> accurate relevance scores
       |
       +-- MMR Re-ranking (diversity filter)   --> final_chunks
     """
@@ -49,16 +53,22 @@ class Retriever:
                  min_similarity: float = 0.0,
                  bm25_weight: float = 0.3,
                  vector_weight: float = 0.7,
-                 mmr_lambda: float = 0.7):
+                 mmr_lambda: float = 0.7,
+                 use_cross_encoder: bool = True):
         """
         Args:
-            embedding_model: Model for query/document embedding
-            vector_store:    ChromaDB vector store
-            top_k:           Number of chunks to return
-            min_similarity:  Minimum similarity threshold
-            bm25_weight:     Weight for BM25 scores (0-1)
-            vector_weight:   Weight for vector scores (0-1)
-            mmr_lambda:      MMR diversity parameter (0=max diversity, 1=max relevance)
+            embedding_model:   Model for query/document embedding
+            vector_store:      ChromaDB vector store
+            top_k:              Number of chunks to return
+            min_similarity:    Minimum similarity threshold
+            bm25_weight:       Weight for BM25 scores (0-1)
+            vector_weight:     Weight for vector scores (0-1)
+            mmr_lambda:        MMR diversity parameter (0=max diversity, 1=max relevance)
+            use_cross_encoder: Re-score fused candidates with a local
+                               cross-encoder before MMR, for more accurate
+                               relevance ranking than embedding similarity
+                               alone. Set False to skip (faster, slightly
+                               less accurate — useful for quick local dev).
         """
         self.embedding_model = embedding_model
         self.vector_store    = vector_store
@@ -67,6 +77,8 @@ class Retriever:
         self.bm25_weight     = bm25_weight
         self.vector_weight   = vector_weight
         self.mmr_lambda      = mmr_lambda
+        self.use_cross_encoder = use_cross_encoder
+        self._reranker = CrossEncoderReranker() if use_cross_encoder else None
 
         # BM25 index (built lazily when first needed)
         self._bm25_index  = None
@@ -76,7 +88,8 @@ class Retriever:
         logger.info(
             f"Hybrid Retriever ready — "
             f"BM25:{bm25_weight} + Vector:{vector_weight}, "
-            f"MMR lambda:{mmr_lambda}, top_k:{top_k}"
+            f"MMR lambda:{mmr_lambda}, top_k:{top_k}, "
+            f"cross_encoder:{use_cross_encoder}"
         )
 
     # ------------------------------------------------------------------
@@ -109,10 +122,18 @@ class Retriever:
         # Step 3: Fuse scores using Reciprocal Rank Fusion
         fused = self._reciprocal_rank_fusion(vector_results, bm25_results)
 
-        # Step 4: MMR re-ranking for diversity
+        # Step 4: Cross-encoder re-ranking — re-scores the fused candidate
+        # list with a model that sees (query, chunk) together, which is
+        # more accurate than the embedding similarity RRF was based on.
+        # Keep a small buffer above k so MMR still has room to trade a
+        # little relevance for diversity.
+        if self.use_cross_encoder and self._reranker:
+            fused = self._reranker.rerank(query, fused, top_n=min(len(fused), k + 3))
+
+        # Step 5: MMR re-ranking for diversity
         final = self._mmr_rerank(query, fused, k)
 
-        # Step 5: Add relevance labels
+        # Step 6: Add relevance labels
         final = self._add_relevance_labels(final)
 
         logger.info(
@@ -386,14 +407,20 @@ class Retriever:
 
     def _add_relevance_labels(self,
                                chunks: List[Dict]) -> List[Dict]:
-        """Add human-readable relevance labels based on combined score."""
+        """
+        Add human-readable relevance labels. Prefers the cross-encoder
+        score when available (more accurate — it saw the query and chunk
+        together) over the RRF combined_score (based on separately-computed
+        embedding/BM25 rankings).
+        """
         if not chunks:
             return chunks
 
-        max_score = max(c.get("combined_score", 0) for c in chunks) or 1.0
+        score_key = "cross_encoder_score" if "cross_encoder_score" in chunks[0] else "combined_score"
+        max_score = max(c.get(score_key, 0) for c in chunks) or 1.0
 
         for i, chunk in enumerate(chunks):
-            score = chunk.get("combined_score", 0)
+            score = chunk.get(score_key, 0)
             ratio = score / max_score
 
             if ratio >= 0.8:

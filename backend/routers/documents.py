@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 
 router = APIRouter(tags=["Documents"])
 
@@ -13,6 +13,20 @@ async def clear_documents(request: Request):
     pipeline = request.app.state.pipeline
     pipeline.vector_store.clear()
     return {"success": True, "message": "Knowledge base cleared"}
+
+@router.delete("/documents/{filename:path}")
+async def delete_document(filename: str, request: Request):
+    """
+    Delete a single document (and all its chunks) from the knowledge base.
+    filename must match exactly what /api/documents lists (the 'source'
+    it was uploaded/indexed under). Using :path so URL-sourced documents
+    (which may contain '/') work too, not just local filenames.
+    """
+    pipeline = request.app.state.pipeline
+    result = pipeline.delete_document(filename)
+    if not result["success"]:
+        raise HTTPException(status_code=404, detail=f"Document '{filename}' not found")
+    return result
 
 @router.get("/stats")
 async def get_stats(request: Request):

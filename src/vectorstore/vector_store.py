@@ -192,6 +192,27 @@ class VectorStore:
         )
         logger.info("Vector store cleared")
 
+    def delete_by_source(self, source: str) -> int:
+        """
+        Delete all chunks belonging to a single document (by its 'source'
+        metadata field — the filename or URL it was uploaded as).
+
+        Returns:
+            Number of chunks deleted (0 if the source wasn't found).
+        """
+        existing = self.collection.get(
+            where={"source": source},
+            include=[]
+        )
+        matched_ids = existing.get("ids", [])
+        if not matched_ids:
+            logger.warning(f"delete_by_source: no chunks found for '{source}'")
+            return 0
+
+        self.collection.delete(where={"source": source})
+        logger.info(f"Deleted {len(matched_ids)} chunks for source '{source}'")
+        return len(matched_ids)
+
     def get_stats(self) -> Dict[str, Any]:
         """Return stats about the vector store."""
         return {

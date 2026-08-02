@@ -514,6 +514,37 @@ class RAGPipeline:
         logger.info("Knowledge base cleared")
         return True
 
+    def delete_document(self, filename: str) -> Dict[str, Any]:
+        """
+        Delete a single document from the knowledge base: removes its
+        chunks from the vector store, drops it from loaded_docs, and
+        rebuilds the BM25 index so hybrid search stays in sync (otherwise
+        the deleted doc's terms would still be searchable/retrievable via
+        the stale BM25 index even after the vector store forgot it).
+
+        Args:
+            filename: The exact 'source' value the document was indexed
+                      under (matches what /api/documents lists).
+
+        Returns:
+            {"success": bool, "filename": str, "chunks_deleted": int}
+        """
+        deleted_count = self.vector_store.delete_by_source(filename)
+
+        if deleted_count == 0:
+            logger.warning(f"delete_document: '{filename}' not found in vector store")
+            return {"success": False, "filename": filename, "chunks_deleted": 0}
+
+        if filename in self.loaded_docs:
+            self.loaded_docs.remove(filename)
+
+        # Rebuild BM25 from whatever remains (empty is fine — build_bm25_index
+        # already handles the zero-documents case with a warning, not a crash)
+        self.retriever.build_bm25_index()
+
+        logger.info(f"Deleted document '{filename}' ({deleted_count} chunks)")
+        return {"success": True, "filename": filename, "chunks_deleted": deleted_count}
+
     def check_system(self) -> Dict[str, bool]:
         """Check all system components."""
         return {

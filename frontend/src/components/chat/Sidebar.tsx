@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { X, ChevronLeft, ChevronRight, Trash2, FileText, Globe } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Trash2, FileText, Globe, Loader2 } from "lucide-react"
 import UploadZone from "@/components/upload/UploadZone"
-import { uploadURL, clearDocuments } from "@/services/api"
+import { uploadURL, clearDocuments, deleteDocument } from "@/services/api"
 
 interface SidebarProps {
   docs: string[]
@@ -14,9 +14,22 @@ export default function Sidebar({ docs, onDocsChange, isOpen, onToggle }: Sideba
   const [urlInput, setUrlInput] = useState("")
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [urlLoading, setUrlLoading] = useState(false)
+  const [deletingDoc, setDeletingDoc] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  const removeDoc = (name: string) => {
-    onDocsChange(docs.filter((d) => d !== name))
+  const removeDoc = async (name: string) => {
+    setDeletingDoc(name)
+    setDeleteError(null)
+    try {
+      await deleteDocument(name)
+      onDocsChange(docs.filter((d) => d !== name))
+    } catch (err) {
+      console.error("Delete failed", err)
+      setDeleteError(`Couldn't delete "${name}" — it's still in your knowledge base.`)
+      setTimeout(() => setDeleteError(null), 4000)
+    } finally {
+      setDeletingDoc(null)
+    }
   }
 
   const addUrl = async () => {
@@ -123,13 +136,24 @@ export default function Sidebar({ docs, onDocsChange, isOpen, onToggle }: Sideba
                     </div>
                     <span className="flex-1 text-xs text-slate-300 truncate">{doc}</span>
                     <button onClick={() => removeDoc(doc)} title="Remove document"
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-500 hover:text-red-400 transition">
-                      <Trash2 className="w-3 h-3" />
+                      disabled={deletingDoc === doc}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-500 hover:text-red-400 transition disabled:opacity-100">
+                      {deletingDoc === doc
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <Trash2 className="w-3 h-3" />
+                      }
                     </button>
                   </div>
                 ))
               )}
             </div>
+
+            {deleteError && (
+              <div className="px-4 py-2 text-xs text-red-400 border-t border-red-500/20"
+                style={{ background: "rgba(239,68,68,0.08)" }}>
+                {deleteError}
+              </div>
+            )}
 
             <div className="px-4 py-3 border-t border-white/10">
               <div className="flex items-center justify-between text-xs text-slate-500">
