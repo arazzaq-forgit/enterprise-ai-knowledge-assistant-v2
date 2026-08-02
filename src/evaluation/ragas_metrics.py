@@ -50,17 +50,20 @@ def cosine_similarity(a: List[float], b: List[float]) -> float:
 class RagasLiteMetrics:
     def __init__(self,
                  embedding_model: EmbeddingModel,
-                 relevance_threshold: float = 0.35):
+                 relevance_threshold: float = 0.25):
         """
         Args:
             embedding_model:     shared EmbeddingModel instance (reuse the
                                   pipeline's, don't create a second one)
             relevance_threshold: cosine similarity above which a retrieved
                                   chunk counts as "relevant" for
-                                  context_precision. 0.35 is a reasonable
-                                  default for all-MiniLM-L6-v2; tune it
-                                  against a few hand-labeled examples if
-                                  you want a stricter/looser bar.
+                                  context_precision. 0.25 is empirically
+                                  calibrated (see scripts/calibrate_threshold.py
+                                  and its output) for all-MiniLM-L6-v2 —
+                                  MiniLM cosine scores run lower than
+                                  intuition suggests; even clearly relevant
+                                  chunks rarely exceed 0.5. Recalibrate if
+                                  you switch embedding models.
         """
         self.embed = embedding_model
         self.hallucination_detector = HallucinationDetector()

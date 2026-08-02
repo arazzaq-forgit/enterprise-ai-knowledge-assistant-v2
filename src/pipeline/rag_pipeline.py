@@ -43,7 +43,7 @@ class RAGPipeline:
                  chunk_overlap: int = 200,
                  top_k: int = 5,
                  persist_dir: str = "data/vectorstore",
-                 llm_model: str = "llama3.2:3b",
+                 llm_model: str = "llama-3.1-8b-instant",
                  embed_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
 
         logger.info("Initializing RAG Pipeline...")
