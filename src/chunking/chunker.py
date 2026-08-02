@@ -50,9 +50,23 @@ class TextChunker:
         )
 
     def _setup_nltk(self):
-        """Download NLTK punkt tokenizer if not already present."""
+        """
+        Download NLTK punkt tokenizer if not already present.
+
+        IMPORTANT: nltk.download() has no built-in timeout — if NLTK's
+        servers are slow or briefly unreachable, this call can hang
+        indefinitely with no exception raised, which stalls the entire
+        app startup (this happened in production: Render's port-scan
+        timed out waiting for the app to even bind a port, because this
+        call never returned). We bound it with a socket-level timeout so
+        it fails fast and falls back to the existing regex sentence
+        splitter instead of blocking startup forever.
+        """
+        import socket
+        original_timeout = socket.getdefaulttimeout()
         try:
             import nltk
+            socket.setdefaulttimeout(10)  # seconds — fail fast, don't hang startup
             try:
                 nltk.data.find("tokenizers/punkt_tab")
             except LookupError:
@@ -62,9 +76,11 @@ class TextChunker:
             except LookupError:
                 nltk.download("punkt", quiet=True)
             self._use_nltk = True
-        except Exception:
+        except Exception as e:
             self._use_nltk = False
-            logger.warning("NLTK not available, using regex sentence splitting")
+            logger.warning(f"NLTK unavailable/timed out ({e}), using regex sentence splitting")
+        finally:
+            socket.setdefaulttimeout(original_timeout)
 
     def _split_into_sentences(self, text: str) -> List[str]:
         """Split text into sentences using NLTK or regex fallback."""
