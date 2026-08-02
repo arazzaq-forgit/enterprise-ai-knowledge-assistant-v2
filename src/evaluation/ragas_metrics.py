@@ -66,61 +66,88 @@ class RagasLiteMetrics:
         self.hallucination_detector = HallucinationDetector()
         self.relevance_threshold = relevance_threshold
 
-    def context_precision(self, question: str, chunks: List[Dict[str, Any]]) -> float:
-        """Fraction of retrieved chunks that are semantically relevant to the question."""
+    def context_precision(self, question: str, chunks: List[Dict[str, Any]]) -> Optional[float]:
+        """
+        Fraction of retrieved chunks that are semantically relevant to the
+        question. Returns None (not 0.0) if the embedding API is
+        unreachable — None means "couldn't measure", 0.0 would falsely
+        imply "measured and found zero relevant chunks".
+        """
         if not chunks:
             return 0.0
-        q_vec = self.embed.embed_text(question)
-        relevant = 0
-        for c in chunks:
-            content = (c.get("content") or "")[:1000]
-            if not content.strip():
-                continue
-            c_vec = self.embed.embed_text(content)
-            if cosine_similarity(q_vec, c_vec) >= self.relevance_threshold:
-                relevant += 1
-        return round(relevant / len(chunks), 3)
+        try:
+            q_vec = self.embed.embed_text(question)
+            relevant = 0
+            for c in chunks:
+                content = (c.get("content") or "")[:1000]
+                if not content.strip():
+                    continue
+                c_vec = self.embed.embed_text(content)
+                if cosine_similarity(q_vec, c_vec) >= self.relevance_threshold:
+                    relevant += 1
+            return round(relevant / len(chunks), 3)
+        except Exception as e:
+            logger.warning(f"context_precision skipped (embedding API unavailable): {e}")
+            return None
 
     def context_recall(self,
                         reference_answer: Optional[str],
                         chunks: List[Dict[str, Any]]) -> Optional[float]:
         """
         Does the retrieved context semantically cover the reference answer?
-        Returns None if no reference answer was supplied for this question.
+        Returns None if no reference answer was supplied, OR if the
+        embedding API is unreachable.
         """
         if not reference_answer or not chunks:
             return None
-        ref_vec = self.embed.embed_text(reference_answer)
-        context_text = " ".join((c.get("content") or "") for c in chunks)[:4000]
-        if not context_text.strip():
-            return 0.0
-        ctx_vec = self.embed.embed_text(context_text)
-        return round(cosine_similarity(ref_vec, ctx_vec), 3)
+        try:
+            ref_vec = self.embed.embed_text(reference_answer)
+            context_text = " ".join((c.get("content") or "") for c in chunks)[:4000]
+            if not context_text.strip():
+                return 0.0
+            ctx_vec = self.embed.embed_text(context_text)
+            return round(cosine_similarity(ref_vec, ctx_vec), 3)
+        except Exception as e:
+            logger.warning(f"context_recall skipped (embedding API unavailable): {e}")
+            return None
 
-    def answer_relevance(self, question: str, answer: str) -> float:
+    def answer_relevance(self, question: str, answer: str) -> Optional[float]:
         """How well the answer semantically addresses the question."""
         if not answer or not answer.strip():
             return 0.0
-        q_vec = self.embed.embed_text(question)
-        a_vec = self.embed.embed_text(answer)
-        return round(cosine_similarity(q_vec, a_vec), 3)
+        try:
+            q_vec = self.embed.embed_text(question)
+            a_vec = self.embed.embed_text(answer)
+            return round(cosine_similarity(q_vec, a_vec), 3)
+        except Exception as e:
+            logger.warning(f"answer_relevance skipped (embedding API unavailable): {e}")
+            return None
 
-    def faithfulness(self, answer: str, chunks: List[Dict[str, Any]], question: str = "") -> float:
+    def faithfulness(self, answer: str, chunks: List[Dict[str, Any]], question: str = "") -> Optional[float]:
         """How grounded the answer is in the retrieved context (1 - hallucination risk)."""
         if not answer or not chunks:
             return 0.0
-        result = self.hallucination_detector.detect(
-            answer=answer, retrieved_chunks=chunks, question=question
-        )
-        risk_score = result.get("risk_score", 100)
-        return round(max(0.0, 1 - (risk_score / 100)), 3)
+        try:
+            result = self.hallucination_detector.detect(
+                answer=answer, retrieved_chunks=chunks, question=question
+            )
+            risk_score = result.get("risk_score", 100)
+            return round(max(0.0, 1 - (risk_score / 100)), 3)
+        except Exception as e:
+            logger.warning(f"faithfulness skipped (hallucination detector failed): {e}")
+            return None
 
     def evaluate_sample(self,
                          question: str,
                          answer: str,
                          chunks: List[Dict[str, Any]],
                          reference_answer: Optional[str] = None) -> Dict[str, Any]:
-        """Compute all four metrics for one (question, answer, context) sample."""
+        """
+        Compute all four metrics for one (question, answer, context) sample.
+        Each metric fails independently — one flaky embedding API call
+        skips that metric (returns None) rather than crashing the whole
+        batch evaluation run.
+        """
         return {
             "context_precision": self.context_precision(question, chunks),
             "context_recall":    self.context_recall(reference_answer, chunks),

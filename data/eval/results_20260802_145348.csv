@@ -1,0 +1,94 @@
+question,reference_answer,rag_answer,rag_response_time_s,rag_context_precision,rag_context_recall,rag_answer_relevance,rag_faithfulness,rag_confidence_score,rag_hallucination_risk,num_chunks_retrieved,baseline_answer,baseline_response_time_s,baseline_answer_relevance
+What is pandas used for?,"Pandas is a Python library used for loading and handling data as a dataframe (rows and columns), including tasks like handling missing values and filtering records.","According to the document context, pandas (pd) is used for:
+
+* Loading/handling data as a dataframe (rows+cols basically) [Source 1: Day13_14_Pandas_DataCleaning_MohammedAbdulRazzaq.pdf, page 1]
+
+In other words, pandas is used for data manipulation and analysis.",20.02,0.0,0.507,0.622,1.0,74,LOW,5,"Pandas is a Python library used for data manipulation and analysis, particularly for working with structured data, such as tabular data (e.g., spreadsheets and SQL tables) and time series data.",0.15,0.641
+How do you handle missing values in a pandas dataframe?,,"To handle missing values in a pandas dataframe, you can use the following methods:
+
+* Check for missing values using `data.info()` to see if the non-null count matches the total row count. If not, it indicates missing values in that column.
+* Use `data.isnull().sum()` to count the number of missing values in each column.
+* Remove missing values using `data.dropna()` (not shown in the provided context).
+* Replace missing values using `data.fillna()` (not shown in the provided context).
+
+According to the general rule mentioned in Source 3, if a column has 60-70%+ nulls, it's recommended to drop the whole column. If there are only a few nulls, it's better to replace them instead of removing the entire row.
+
+Source: Day13_14_Pandas_DataCleaning_MohammedAbdulRazzaq.pdf (pages 2, 3)",11.86,0.571,,0.723,0.95,65,LOW,7,"To handle missing values in a pandas DataFrame, you can use the following methods:
+
+1. **Drop missing values**: Use the `dropna()` function to remove rows or columns with missing values.
+2. **Fill missing values**: Use the `fillna()` function to replace missing values with a specific value, such as the mean, median, or a custom value.
+3. **Interpolate missing values**: Use the `interpolate()` function to fill missing values with interpolated values based on the surrounding data.
+4. **Impute missing values**: Use a machine learning model or a statistical method to predict the missing values.
+
+For example:
+```python
+import pandas as pd
+
+# create a sample DataFrame with missing values
+df = pd.DataFrame({'A': [1, 2, None, 4], 'B': [5, None, 7, 8]})
+
+# drop missing values
+df_drop = df.dropna()
+
+# fill missing values with mean
+df_fill_mean = df.fillna(df.mean())
+
+# interpolate missing values
+df_interpolate = df.interpolate()
+
+# impute missing values (not shown in this example)
+```",0.41,0.752
+How do you filter rows in a dataframe based on a condition?,,"To filter rows in a dataframe based on a condition, you can use the following methods:
+
+* Using the `!=` operator to exclude a specific value:
+  `conditional_species = data[data['Species'] != 'Iris-setosa']`
+  (Source: Day13_14_Pandas_DataCleaning_MohammedAbdulRazzaq.pdf, page 4)
+
+* Using the `isin()` function to filter for multiple values at once from a list:
+  `conditional_species_1 = data[data['Species'].isin(['Iris-versicolor', 'Iris-virginica'])]`
+  (Source: Day13_14_Pandas_DataCleaning_MohammedAbdulRazzaq.pdf, page 4)
+
+* Using the `where` clause (not shown in the provided context, but mentioned in Source 3: Day7_8_SQL_Basics_Subqueries_MohammedAbdulRazzaq.pdf, page 1)",11.36,0.429,,0.702,1.0,85,LOW,7,"You can filter rows in a dataframe based on a condition using the `.loc[]` or `.query()` method in pandas. 
+
+Here's an example:
+
+- Using `.loc[]`: `df.loc[df['column_name'] == 'condition']`
+- Using `.query()`: `df.query('column_name == ""condition""')`
+
+Replace 'column_name' and 'condition' with your actual column name and condition.",0.3,0.773
+How is pandas typically imported in Python code?,"Pandas is imported as 'pd', typically with the line 'import pandas as pd'.","Based on the provided document context, pandas is typically imported in Python code as follows:
+
+```python
+import pandas as pd
+```
+
+Source: [Source 2: Day13_14_Pandas_DataCleaning_MohammedAbdulRazzaq.pdf, page 1]",10.55,0.143,0.29,0.766,0.95,51,LOW,7,"The pandas library is typically imported in Python code using the following line:
+
+```python
+import pandas as pd
+```",0.15,0.782
+What is the difference between dropna and fillna?,,"Based on the provided document context, the difference between `dropna` and `fillna` is as follows:
+
+`dropna`:
+- Wipes any row with even 1 null in it, no replacing, straight up gone (Source 1: Day13_14_Pandas_DataCleaning_MohammedAbdulRazzaq.pdf, page 4)
+- Example: `data.dropna(inplace=True)`
+
+`fillna`:
+- Replaces null values with a specified value (either mean or median, depending on the column) (Source 1: Day13_14_Pandas_DataCleaning_MohammedAbdulRazzaq.pdf, page 4)
+- Example: `data['SepalLengthCm'] = data['SepalLengthCm'].fillna(data['SepalLengthCm'].mean())`
+
+In summary, `dropna` removes rows with null values, while `fillna` replaces null values with a specified value.",10.65,0.0,,0.667,1.0,56,LOW,7,"In data manipulation, 'dropna' and 'fillna' are two functions used in pandas library, primarily in Python.
+
+- 'dropna' function removes rows or columns that contain missing values (NaN).
+- 'fillna' function replaces missing values (NaN) with a specified value.",0.3,0.717
+What machine learning algorithms does this document cover?,,"I could not find any information about machine learning algorithms in the provided document context.
+
+However, I can tell you that the document context covers the following topics:
+
+* Loading and exploring data using pandas (Source 1: Day13_14_Pandas_DataCleaning_MohammedAbdulRazzaq.pdf)
+* Data cleaning and filtering (Source 1: Day13_14_Pandas_DataCleaning_MohammedAbdulRazzaq.pdf)
+* SQL basics (Source 3: Day7_8_SQL_Basics_Subqueries_MohammedAbdulRazzaq.pdf)
+* Subqueries (Source 4: Day7_8_SQL_Basics_Subqueries_MohammedAbdulRazzaq.pdf)
+* Joins, GroupBy, and string functions in SQL (Source 5: Day9_10_Joins_GroupBy_StringFunctions_MohammedAbdulRazzaq.pdf)
+
+These topics are related to data science and SQL, but do not specifically cover machine learning algorithms.",9.55,0.0,,0.536,1.0,68,LOW,5,I don't have any information about a document. You'll need to provide more context or information about the document you're referring to.,0.23,0.332

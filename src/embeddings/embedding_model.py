@@ -59,12 +59,17 @@ class EmbeddingModel:
                 "HF_TOKEN is not set — embedding calls will fail with 401. "
                 "Set it as an environment variable (see Render dashboard)."
             )
+        # NOTE: api-inference.huggingface.co (the old endpoint) was fully
+        # decommissioned by HuggingFace and no longer resolves in DNS at
+        # all (returns a 410 Gone where it still resolves elsewhere).
+        # router.huggingface.co is the replacement — same request/response
+        # shape, different host + path prefix.
         self.api_url = (
-            f"https://api-inference.huggingface.co/pipeline/"
-            f"feature-extraction/{model_name}"
+            f"https://router.huggingface.co/hf-inference/models/"
+            f"{model_name}/pipeline/feature-extraction"
         )
         self.headers = {"Authorization": f"Bearer {self.hf_token}"}
-        logger.info(f"Embedding model ready: {model_name} (HuggingFace Inference API)")
+        logger.info(f"Embedding model ready: {model_name} (HuggingFace Router API)")
 
     def _post_with_retry(self, payload: dict, max_retries: int = 5) -> list:
         """

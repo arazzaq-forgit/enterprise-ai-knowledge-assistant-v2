@@ -1,16 +1,22 @@
 [
   {
-    "question": "What is this document about?",
-    "reference_answer": "Replace this with a 1-2 sentence correct summary of what your uploaded document actually covers."
+    "question": "What is pandas used for?",
+    "reference_answer": "Pandas is a Python library used for loading and handling data as a dataframe (rows and columns), including tasks like handling missing values and filtering records."
   },
   {
-    "question": "Replace with a specific factual question your document can answer"
+    "question": "How do you handle missing values in a pandas dataframe?"
   },
   {
-    "question": "Replace with a question requiring info from multiple parts of the document",
-    "reference_answer": "Replace with the correct combined answer, if you want context_recall scored for this one"
+    "question": "How do you filter rows in a dataframe based on a condition?"
   },
   {
-    "question": "Replace with a question your document does NOT cover, to test refusal behavior"
+    "question": "How is pandas typically imported in Python code?",
+    "reference_answer": "Pandas is imported as 'pd', typically with the line 'import pandas as pd'."
+  },
+  {
+    "question": "What is the difference between dropna and fillna?"
+  },
+  {
+    "question": "What machine learning algorithms does this document cover?"
   }
 ]
