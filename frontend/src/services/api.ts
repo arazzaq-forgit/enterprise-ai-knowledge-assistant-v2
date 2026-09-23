@@ -39,8 +39,19 @@ export const deleteDocument = async (filename: string) => {
 // from here. Confidence + hallucination scores now arrive as a final
 // "eval" event on the streamChat() SSE stream below — no second request.
 
+export interface SourceCitation {
+  snippet: string
+  highlight_start: number
+  highlight_end: number
+  matched: boolean
+  source: string
+  page: number | string | null
+  similarity: number | null
+  relevance_label: string | null
+}
+
 export interface EvalPayload {
-  sources: unknown[]
+  sources: SourceCitation[]
   confidence: {
     score: number
     label: string
@@ -55,6 +66,11 @@ export interface EvalPayload {
     explanation?: string
     is_grounded: boolean
   }
+  // 0-3 short follow-up questions grounded in the retrieved context,
+  // generated server-side after the answer. Always an array (never
+  // undefined) — backend defaults to [] when the feature is off or
+  // generation fails, so no defensive check needed on this field.
+  suggested_questions: string[]
 }
 
 export const streamChat = (
@@ -90,6 +106,7 @@ export const streamChat = (
               sources: json.sources,
               confidence: json.confidence,
               hallucination_check: json.hallucination_check,
+              suggested_questions: json.suggested_questions ?? [],
             })
           }
           if (json.done) onDone()

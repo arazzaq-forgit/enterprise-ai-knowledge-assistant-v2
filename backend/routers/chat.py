@@ -13,12 +13,13 @@ def make_done_event():
     data = json.dumps({"done": True})
     return f"data: {data}\n\n"
 
-def make_eval_event(sources, confidence, hallucination_check):
+def make_eval_event(sources, confidence, hallucination_check, suggested_questions=None):
     data = json.dumps({
         "eval": True,
         "sources": sources,
         "confidence": confidence,
         "hallucination_check": hallucination_check,
+        "suggested_questions": suggested_questions or [],
     })
     return f"data: {data}\n\n"
 
@@ -55,6 +56,7 @@ async def chat(request: Request, body: ChatRequest):
                         event["sources"],
                         event["confidence"],
                         event["hallucination_check"],
+                        event.get("suggested_questions", []),
                     )
             yield make_done_event()
         except Exception as e:

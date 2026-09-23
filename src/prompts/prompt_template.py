@@ -214,6 +214,52 @@ while using the context provided.
 
 ANSWER:"""
 
+    # ── Suggested Follow-Up Questions Prompt ───────────────────────
+    @staticmethod
+    def suggested_questions_prompt(question: str,
+                                    answer: str,
+                                    context: str) -> str:
+        """
+        Prompt to generate 3 short, natural follow-up questions a user
+        might ask next, grounded in what's actually in the retrieved
+        context (not generic "tell me more" filler).
+
+        Kept deliberately small — this is a cheap side-call after the
+        main answer, not a second reasoning pass, so the prompt is
+        short and the output format is strict to keep parsing reliable.
+
+        Args:
+            question: The question that was just answered
+            answer:   The answer that was just given
+            context:  The retrieved context used to answer (truncated)
+
+        Returns:
+            Formatted prompt string
+        """
+        # Context can be large; only a slice is needed to suggest
+        # plausible next questions, so keep this call cheap.
+        trimmed_context = context[:1500]
+
+        return f"""Based on this Q&A exchange and the source material, \
+suggest 3 short follow-up questions the user might naturally ask next.
+
+SOURCE MATERIAL (excerpt):
+{trimmed_context}
+
+QUESTION ASKED: {question}
+ANSWER GIVEN: {answer[:800]}
+
+RULES:
+- Suggest questions answerable from the source material above
+- Keep each question short (under 12 words)
+- Do not repeat the question already asked
+- Do not number the questions or add any explanation
+- Respond with ONLY a JSON array of 3 strings, nothing else
+
+Example format: ["Question one?", "Question two?", "Question three?"]
+
+JSON ARRAY:"""
+
     # ── No Context Prompt ────────────────────────────────────────
     @staticmethod
     def no_context_prompt(question: str) -> str:

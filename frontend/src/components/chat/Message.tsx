@@ -1,5 +1,7 @@
-import { Bot, User, Copy, Check, ShieldCheck, ShieldAlert, ShieldX } from "lucide-react"
+import { Bot, User, Copy, Check, ShieldCheck, ShieldAlert, ShieldX, MessageSquarePlus } from "lucide-react"
 import { useState } from "react"
+import Sources from "./Sources"
+import type { SourceCitation } from "@/services/api"
 
 interface ConfidenceData {
   score: number
@@ -23,9 +25,23 @@ interface MessageProps {
   isStreaming?: boolean
   confidence?: ConfidenceData
   hallucination?: HallucinationData
+  // Only rendered on the most recent assistant message once streaming
+  // has finished — ChatWindow decides which message this applies to.
+  suggestedQuestions?: string[]
+  onSuggestionClick?: (question: string) => void
+  sources?: SourceCitation[]
 }
 
-export default function Message({ role, content, isStreaming, confidence, hallucination }: MessageProps) {
+export default function Message({
+  role,
+  content,
+  isStreaming,
+  confidence,
+  hallucination,
+  suggestedQuestions,
+  onSuggestionClick,
+  sources,
+}: MessageProps) {
   const [copied, setCopied] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const isUser = role === "user"
@@ -85,6 +101,26 @@ export default function Message({ role, content, isStreaming, confidence, halluc
     )
   }
 
+  const SuggestedQuestions = () => {
+    if (isUser || isStreaming || !suggestedQuestions || suggestedQuestions.length === 0) return null
+
+    return (
+      <div className="mt-3 pt-3 border-t border-white/10 flex flex-wrap gap-2">
+        {suggestedQuestions.map((q, i) => (
+          <button
+            key={i}
+            onClick={() => onSuggestionClick?.(q)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-slate-300 border border-white/10 hover:text-white hover:border-indigo-500/40 hover:bg-white/5 transition text-left"
+            style={{ background: "rgba(255,255,255,0.03)" }}
+          >
+            <MessageSquarePlus className="w-3 h-3 flex-shrink-0 text-indigo-400" />
+            {q}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className={`flex gap-3 group ${isUser ? "flex-row-reverse" : "flex-row"}`}>
 
@@ -117,6 +153,10 @@ export default function Message({ role, content, isStreaming, confidence, halluc
         )}
 
         <ConfidenceBadge />
+        {!isUser && !isStreaming && sources && sources.length > 0 && (
+          <Sources sources={sources} />
+        )}
+        <SuggestedQuestions />
 
         {!isUser && !isStreaming && content && (
           <button

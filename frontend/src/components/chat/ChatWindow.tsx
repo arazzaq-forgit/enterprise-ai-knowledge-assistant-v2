@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react"
-import { Send, PanelLeftOpen, FileText, Sparkles } from "lucide-react"
+import { Send, PanelLeftOpen, FileText, Sparkles, Download, ChevronDown, FileDown, FileType } from "lucide-react"
 import Message from "./Message"
 import { streamChat } from "@/services/api"
+import { exportAsMarkdown, exportAsPDF, exportAsDocx } from "@/utils/exportChat"
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -37,11 +38,35 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME])
   const [input, setInput] = useState("")
   const [isStreaming, setIsStreaming] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const exportRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // Only real exchanged messages (not the static welcome message) are worth exporting
+  const exportableMessages = () => messages.filter((m) => m !== WELCOME)
+
+  const handleExport = (format: "markdown" | "pdf" | "docx") => {
+    const toExport = exportableMessages()
+    if (toExport.length === 0) return
+    if (format === "markdown") exportAsMarkdown(toExport)
+    else if (format === "pdf") exportAsPDF(toExport)
+    else exportAsDocx(toExport)
+    setExportOpen(false)
+  }
 
   const getHistory = (msgs: ChatMessage[]) => {
     const pairs: { question: string; answer: string }[] = []
@@ -123,7 +148,37 @@ export default function ChatWindow({ docs, onSidebarToggle, sidebarOpen }: ChatW
         )}
         <Sparkles className="w-5 h-5 text-indigo-400" />
         <span className="font-semibold text-white">DocMind AI</span>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <div className="relative" ref={exportRef}>
+            <button
+              onClick={() => setExportOpen((v) => !v)}
+              disabled={exportableMessages().length === 0}
+              title="Export conversation"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-slate-400 border border-white/10 hover:text-white hover:bg-white/10 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: "rgba(255,255,255,0.04)" }}
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            {exportOpen && (
+              <div className="absolute right-0 mt-2 w-44 rounded-xl border border-white/10 shadow-xl overflow-hidden z-20"
+                style={{ background: "rgba(15,20,35,0.98)", backdropFilter: "blur(12px)" }}>
+                <button onClick={() => handleExport("markdown")}
+                  className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-slate-300 hover:bg-white/10 hover:text-white transition text-left">
+                  <FileText className="w-3.5 h-3.5" /> Markdown (.md)
+                </button>
+                <button onClick={() => handleExport("pdf")}
+                  className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-slate-300 hover:bg-white/10 hover:text-white transition text-left">
+                  <FileDown className="w-3.5 h-3.5" /> PDF (.pdf)
+                </button>
+                <button onClick={() => handleExport("docx")}
+                  className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-slate-300 hover:bg-white/10 hover:text-white transition text-left">
+                  <FileType className="w-3.5 h-3.5" /> Word (.docx)
+                </button>
+              </div>
+            )}
+          </div>
           {docs.length > 0 ? (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border border-green-500/20 text-green-400"
               style={{ background: "rgba(255,255,255,0.04)" }}>

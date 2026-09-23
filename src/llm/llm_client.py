@@ -40,8 +40,15 @@ class LLMClient:
             logger.error(f"Groq stream failed: {str(e)}")
             raise
 
-    def generate(self, prompt: str, system_prompt: str = ""):
-        """Generate full response at once."""
+    def generate(self, prompt: str, system_prompt: str = "", max_tokens: int = None):
+        """
+        Generate full response at once.
+
+        max_tokens: optional per-call override. Defaults to self.max_tokens
+        (the constructor value) when not passed, so existing callers are
+        unaffected. Useful for cheap side-calls (e.g. suggested follow-up
+        questions) that need far fewer tokens than a full answer.
+        """
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -52,7 +59,7 @@ class LLMClient:
                 messages    = messages,
                 stream      = False,
                 temperature = self.temperature,
-                max_tokens  = self.max_tokens,
+                max_tokens  = max_tokens if max_tokens is not None else self.max_tokens,
             )
             return response.choices[0].message.content
         except Exception as e:
