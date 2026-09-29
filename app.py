@@ -1,6 +1,6 @@
 """
 Enterprise AI Knowledge Assistant
-Main Streamlit Application
+Main Streamlits Application
 Author: Mohd Abdul Razzaq
 """
 
