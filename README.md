@@ -353,7 +353,7 @@ vectorstore:
 
 ## 👨‍💻 Author
 
-**Mohd Abdul Razzaq**
+**Mohammed Abdul Razzaq**
 - 🎓 Data Science & AI-ML
 - 💼 Building production-ready AI systems
 - 🌟 Passionate about making AI accessible
