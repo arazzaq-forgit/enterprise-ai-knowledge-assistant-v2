@@ -14,7 +14,7 @@
 
 ## 📌 What is this?
 
-An **Enterprise-grade AI assistant** that lets you:
+An **Enterprise-grade AI assistant** that let you:
 - 📄 Upload **PDF, Word, TXT, CSV, MD** documents
 - 🌐 Add **website URLs** as knowledge sources  
 - 💬 Ask **natural language questions** about your docs
